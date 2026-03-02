@@ -1,0 +1,36 @@
+# See http://help.github.com/ignore-files/ for more about ignoring files.
+
+# compiled output
+/dist
+/tmp
+/out-tsc
+/bazel-out
+
+# dependencies
+/node_modules
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.cproject
+/.vscode/*
+!/.vscode/extensions.json
+!/.vscode/launch.json
+!/.vscode/tasks.json
+/.settings
+/.history
+*.sublime-project
+*.sublime-workspace
+.vscode
+
+# misc
+/.angular
+/npm-debug.log
+/yarn-error.log
+/parallel-shell-log.txt
+/parallel-shell-log.txt.1
+/.DS_Store
+/.env
+
+# End of .gitignore

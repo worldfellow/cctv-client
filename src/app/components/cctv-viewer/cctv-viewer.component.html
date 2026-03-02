@@ -1,0 +1,103 @@
+<div class="viewer-overlay" (click)="onClose()">
+    <div class="viewer-container glass-morphism" (click)="$event.stopPropagation()">
+        <header class="viewer-header">
+            <div class="header-info">
+                <h2 class="feed-name">{{ feed.name }}</h2>
+                <span class="feed-location">{{ feed.location }}</span>
+            </div>
+            <button class="close-btn" (click)="onClose()">
+                <i data-lucide="x"></i>
+            </button>
+        </header>
+
+        <div class="video-section">
+            <div class="video-wrapper">
+                <ng-container *ngIf="feed.wsUrl && feed.status === 'online'; else otherFeeds">
+                    <canvas #canvas class="video-feed"></canvas>
+                </ng-container>
+                <ng-template #otherFeeds>
+                    <video *ngIf="feed.streamUrl; else useThumbnail" [src]="feed.streamUrl" [poster]="feed.thumbnail"
+                        class="video-feed" autoplay muted controls></video>
+                    <ng-template #useThumbnail>
+                        <img [src]="feed.thumbnail" class="video-feed" alt="Live Feed">
+                    </ng-template>
+                </ng-template>
+
+                <div class="video-overlay-top">
+                    <div class="rec-indicator" *ngIf="controls.isRecording">
+                        <span class="rec-dot"></span>
+                        REC
+                    </div>
+                    <div class="timestamp">
+                        {{ '2026-02-18 11:54:22' }} <!-- Simulated live timestamp -->
+                    </div>
+                </div>
+
+                <div class="video-controls">
+                    <div class="control-group">
+                        <button class="control-btn" (click)="toggleRecording()" [class.active]="controls.isRecording"
+                            title="Toggle Recording">
+                            <i data-lucide="circle"></i>
+                        </button>
+                        <button class="control-btn" (click)="toggleMute()" [class.active]="controls.isMuted"
+                            title="Toggle Mute">
+                            <i [attr.data-lucide]="controls.isMuted ? 'volume-x' : 'volume-2'"></i>
+                        </button>
+                    </div>
+
+                    <div class="control-group center">
+                        <button class="control-btn" title="Rewind 10s"><i data-lucide="rotate-ccw"></i></button>
+                        <button class="control-btn play" title="Play/Pause"><i data-lucide="play"></i></button>
+                        <button class="control-btn" title="Forward 10s"><i data-lucide="rotate-cw"></i></button>
+                    </div>
+
+                    <div class="control-group">
+                        <button class="control-btn" (click)="toggleFullscreen()" title="Full Screen">
+                            <i data-lucide="maximize"></i>
+                        </button>
+                        <button class="control-btn" title="Screenshot"><i data-lucide="camera"></i></button>
+                        <button class="control-btn" title="Settings"><i data-lucide="settings"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-info glass-morphism">
+                <h3>Feed Analysis</h3>
+                <div class="analysis-item">
+                    <span class="label">Resolution</span>
+                    <span class="value">4K UHD (3840x2160)</span>
+                </div>
+                <div class="analysis-item">
+                    <span class="label">Framerate</span>
+                    <span class="value">60 FPS</span>
+                </div>
+                <div class="analysis-item">
+                    <span class="label">Bitrate</span>
+                    <span class="value">12.4 Mbps</span>
+                </div>
+                <div class="analysis-item">
+                    <span class="label">Codec</span>
+                    <span class="value">H.265 / HEVC</span>
+                </div>
+
+                <hr class="divider">
+
+                <h3>Recent Events</h3>
+                <div class="event-list">
+                    <div class="event">
+                        <span class="time">11:45</span>
+                        <span class="desc">Motion detected in sector 4</span>
+                    </div>
+                    <div class="event">
+                        <span class="time">10:32</span>
+                        <span class="desc">Automatic night vision enabled</span>
+                    </div>
+                    <div class="event">
+                        <span class="time">09:15</span>
+                        <span class="desc">System check: All sensors OK</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

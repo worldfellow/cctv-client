@@ -1,0 +1,485 @@
+<div class="registration-container">
+    <div class="header-section">
+        <div class="title-info">
+            <h1 class="gradient-text">Camera Management</h1>
+            <p class="subtitle">Manage camera devices, IPs, and RTSP channels</p>
+        </div>
+        <div class="actions">
+            <div class="custom-dropdown">
+                <div class="dropdown-trigger" (click)="toggleFilterDropdown($event)"
+                    [class.active]="showFilterDropdown">
+                    <lucide-icon name="building-2"></lucide-icon>
+                    <span>{{ selectedFilterCollegeName }}</span>
+                    <lucide-icon name="chevron-down" class="arrow"></lucide-icon>
+                </div>
+
+                <div class="dropdown-menu" *ngIf="showFilterDropdown" (click)="$event.stopPropagation()">
+                    <div class="search-container">
+                        <lucide-icon name="search"></lucide-icon>
+                        <input type="text" [(ngModel)]="filterSearch" name="filterSearch"
+                            placeholder="Search college..." (click)="$event.stopPropagation()">
+                    </div>
+                    <div class="options-list">
+                        <div class="option" (click)="selectFilterCollege('')"
+                            [class.selected]="selectedFilterCollege === ''">
+                            All Colleges
+                        </div>
+                        <div class="option" *ngFor="let college of filteredCollegesFilter"
+                            (click)="selectFilterCollege(college.id)"
+                            [class.selected]="selectedFilterCollege === college.id">
+                            {{ college.name }}
+                        </div>
+                        <div class="no-results" *ngIf="filteredCollegesFilter.length === 0">
+                            No colleges found
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button type="button" class="btn-secondary tooltip" (click)="openBulkUploadModal()">
+                <lucide-icon name="folder-up"></lucide-icon>
+                <span>Bulk Import</span>
+                <span class="tooltip-text">Bulk Import Cameras</span>
+            </button>
+
+            <button type="button" class="add-btn" (click)="openModal(false)">
+                <lucide-icon name="plus"></lucide-icon>
+                <span>Add Camera</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Bulk Action Bar -->
+    <div class="bulk-action-bar glass-morphism" *ngIf="selectedCameraIds.size > 0">
+        <div class="selection-info">
+            <lucide-icon name="check-square"></lucide-icon>
+            <span>{{ selectedCameraIds.size }} camera(s) selected</span>
+        </div>
+        <div class="bulk-actions">
+            <button class="bulk-btn activate tooltip" (click)="bulkActivate()">
+                <lucide-icon name="check-circle"></lucide-icon>
+                <span>Activate</span>
+                <span class="tooltip-text">Activate Selected Cameras</span>
+            </button>
+            <button class="bulk-btn deactivate tooltip" (click)="bulkDeactivate()">
+                <lucide-icon name="x-circle"></lucide-icon>
+                <span>Deactivate</span>
+                <span class="tooltip-text">Deactivate Selected Cameras</span>
+            </button>
+            <button class="bulk-btn delete tooltip" (click)="bulkDelete()">
+                <lucide-icon name="trash-2"></lucide-icon>
+                <span>Delete</span>
+                <span class="tooltip-text">Delete Selected Cameras</span>
+            </button>
+            <button class="bulk-btn clear tooltip" (click)="clearSelection()">
+                <lucide-icon name="x"></lucide-icon>
+                <span>Clear</span>
+                <span class="tooltip-text">Clear Selection</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="table-card glass-morphism">
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th class="checkbox-col">
+                            <label class="custom-checkbox">
+                                <input type="checkbox" [checked]="isAllSelected" (change)="toggleSelectAll()">
+                                <span class="checkmark"></span>
+                            </label>
+                        </th>
+                        <th>Name</th>
+                        <th>Location</th>
+                        <th>Device (IP:Port)</th>
+                        <th>College</th>
+                        <th>Channel</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody [class.loading-fade]="isLoading">
+                    <tr *ngFor="let record of allRecords" [class.selected-row]="selectedCameraIds.has(record.id!)">
+                        <td class="checkbox-col">
+                            <label class="custom-checkbox">
+                                <input type="checkbox" [checked]="selectedCameraIds.has(record.id!)"
+                                    (change)="toggleSelect(record.id!)">
+                                <span class="checkmark"></span>
+                            </label>
+                        </td>
+                        <td>
+                            <span class="primary-text" style="font-weight: 600;">{{ record.name }}</span>
+                        </td>
+                        <td>
+                            <span class="sub-text" style="color: var(--text-muted); font-size: 0.85rem;">{{
+                                record.location || 'No Location' }}</span>
+                        </td>
+                        <td>
+                            <div class="device-cell">
+                                <div class="icon-box">
+                                    <lucide-icon name="video"></lucide-icon>
+                                </div>
+                                <div class="device-info">
+                                    <span class="ip-text">{{ record.ipAddress }}</span>
+                                    <span class="user-text">Port: {{ record.rtspPort }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td data-label="College">
+                            <span class="college-info">{{ record.collegeName || 'N/A' }}</span>
+                        </td>
+                        <td data-label="Channel">
+                            <div class="channel-badge">
+                                <lucide-icon name="radio"></lucide-icon>
+                                <span>Ch: {{ record.channel }}</span>
+                            </div>
+                        </td>
+                        <td data-label="Status">
+                            <label class="toggle-label table-toggle">
+                                <div class="toggle-switch">
+                                    <input type="checkbox" [checked]="record.isActive" (change)="toggleStatus(record)">
+                                    <span class="slider"></span>
+                                </div>
+                                <span class="status-text" [class.active]="record.isActive">
+                                    {{ record.isActive ? 'Online' : 'Offline' }}
+                                </span>
+                            </label>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="action-btn edit tooltip" (click)="editRecord(record)">
+                                    <lucide-icon name="edit-3"></lucide-icon>
+                                    <span class="tooltip-text">Edit Camera</span>
+                                </button>
+                                <button class="action-btn delete tooltip" (click)="deleteRecord(record)">
+                                    <lucide-icon name="trash-2"></lucide-icon>
+                                    <span class="tooltip-text">Delete Camera</span>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr *ngIf="allRecords.length === 0 && !isLoading">
+                        <td colspan="7">
+                            <div class="enhanced-empty-state">
+                                <div class="illustration">
+                                    <div class="main-icon-wrapper">
+                                        <lucide-icon name="camera-off" class="main-icon"></lucide-icon>
+                                    </div>
+                                </div>
+                                <h3>No Cameras Found</h3>
+                                <p>No registered camera devices found. Start by adding your first camera.</p>
+                                <button class="add-btn-empty" (click)="openModal(false)">
+                                    <lucide-icon name="plus"></lucide-icon>
+                                    <span>Register First Camera</span>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination Footer -->
+        <div class="pagination-footer" *ngIf="totalRecords > 0">
+            <div class="page-size-selector">
+                <span>Items per page:</span>
+                <select [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+                    <option [ngValue]="5">5</option>
+                    <option [ngValue]="10">10</option>
+                    <option [ngValue]="20">20</option>
+                    <option [ngValue]="50">50</option>
+                </select>
+            </div>
+            <div class="pagination-info">
+                Showing <span>{{ (currentPage - 1) * pageSize + 1 }}</span> to
+                <span>{{ (currentPage * pageSize) > totalRecords ? totalRecords : (currentPage * pageSize) }}</span> of
+                <span>{{ totalRecords }}</span> records
+            </div>
+            <div class="pagination-controls">
+                <button class="page-btn" (click)="prevPage()" [disabled]="currentPage === 1">
+                    <lucide-icon name="chevron-left"></lucide-icon>
+                    <span>Previous</span>
+                </button>
+                <div class="page-numbers">
+                    <span class="current-page">Page {{ currentPage }} of {{ totalPages }}</span>
+                </div>
+                <button class="page-btn" (click)="nextPage()"
+                    [disabled]="currentPage === totalPages || totalPages === 0">
+                    <span>Next</span>
+                    <lucide-icon name="chevron-right"></lucide-icon>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Device Registration / Edit Modal -->
+    <div class="modal-overlay" *ngIf="isModalOpen" (click)="closeModal()">
+        <div class="modal-content glass-morphism modal-lg" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h2>{{ isEditing ? 'Edit Camera Device' : 'Register Camera Devices' }}</h2>
+                <button class="close-btn" (click)="closeModal()">
+                    <lucide-icon name="x"></lucide-icon>
+                </button>
+            </div>
+
+            <form [formGroup]="registrationForm" (ngSubmit)="onSubmit()" class="registration-form" autocomplete="off">
+                <div formArrayName="cameras" class="camera-list">
+                    <div *ngFor="let camera of cameras.controls; let camIndex=index" [formGroupName]="camIndex"
+                        class="device-card nested-glass">
+
+                        <div class="card-header">
+                            <h3 class="device-title">{{ isEditing ? 'Edit Camera' : 'Device ' + (camIndex + 1) }}</h3>
+                            <button *ngIf="cameras.length > 1 && !isEditing" type="button" class="delete-btn"
+                                (click)="removeCamera(camIndex)">
+                                <lucide-icon name="trash-2"></lucide-icon>
+                            </button>
+                        </div>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>College/Campus</label>
+                                <div class="custom-dropdown">
+                                    <div class="dropdown-trigger" (click)="toggleModalDropdown($event, camIndex)"
+                                        [class.active]="openDropdownIndex === camIndex">
+                                        <lucide-icon name="building-2"></lucide-icon>
+                                        <span>{{ getSelectedCollegeNameModal(camIndex) }}</span>
+                                        <lucide-icon name="chevron-down" class="arrow"></lucide-icon>
+                                    </div>
+
+                                    <div class="dropdown-menu" *ngIf="openDropdownIndex === camIndex"
+                                        (click)="$event.stopPropagation()">
+                                        <div class="search-container">
+                                            <lucide-icon name="search"></lucide-icon>
+                                            <input type="text" [(ngModel)]="modalSearch"
+                                                [ngModelOptions]="{standalone: true}" placeholder="Search college..."
+                                                (click)="$event.stopPropagation()">
+                                        </div>
+                                        <div class="options-list">
+                                            <div class="option" *ngFor="let college of filteredCollegesModal"
+                                                (click)="selectModalCollege(camIndex, college)"
+                                                [class.selected]="camera.get('collegeId')?.value === college.id">
+                                                {{ college.name }}
+                                            </div>
+                                            <div class="no-results" *ngIf="filteredCollegesModal.length === 0">
+                                                No colleges found
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <input type="hidden" formControlName="collegeId">
+                                <div class="validation-error"
+                                    *ngIf="camera.get('collegeId')?.invalid && (camera.get('collegeId')?.dirty || camera.get('collegeId')?.touched)">
+                                    <span *ngIf="camera.get('collegeId')?.errors?.['required']">College selection is
+                                        required.</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>IP Address</label>
+                                <div class="input-wrapper">
+                                    <lucide-icon name="network" class="input-icon"></lucide-icon>
+                                    <input type="text" formControlName="ipAddress" placeholder="192.168.1.100">
+                                </div>
+                                <div class="validation-error"
+                                    *ngIf="camera.get('ipAddress')?.invalid && (camera.get('ipAddress')?.dirty || camera.get('ipAddress')?.touched)">
+                                    <span *ngIf="camera.get('ipAddress')?.errors?.['required']">IP Address is
+                                        required.</span>
+                                    <span *ngIf="camera.get('ipAddress')?.errors?.['pattern']">Please enter a valid IPv4
+                                        address.</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>RTSP Port</label>
+                                <div class="input-wrapper">
+                                    <lucide-icon name="plug" class="input-icon"></lucide-icon>
+                                    <input type="number" formControlName="rtspPort" placeholder="554">
+                                </div>
+                                <div class="validation-error"
+                                    *ngIf="camera.get('rtspPort')?.invalid && (camera.get('rtspPort')?.dirty || camera.get('rtspPort')?.touched)">
+                                    <span *ngIf="camera.get('rtspPort')?.errors?.['required']">RTSP Port is
+                                        required.</span>
+                                    <span *ngIf="camera.get('rtspPort')?.errors?.['min']">Port must be at least
+                                        1.</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Username <span *ngIf="isEditing" class="pw-note">(blank = keep
+                                        current)</span></label>
+                                <div class="input-wrapper">
+                                    <lucide-icon name="user" class="input-icon"></lucide-icon>
+                                    <input type="text" formControlName="username" placeholder="admin">
+                                </div>
+                                <div class="validation-error"
+                                    *ngIf="camera.get('username')?.invalid && (camera.get('username')?.dirty || camera.get('username')?.touched)">
+                                    <span *ngIf="camera.get('username')?.errors?.['required']">Username is
+                                        required.</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Password <span *ngIf="isEditing" class="pw-note">(blank = keep
+                                        current)</span></label>
+                                <div class="input-wrapper">
+                                    <lucide-icon name="lock" class="input-icon"></lucide-icon>
+                                    <input type="password" formControlName="password" placeholder="••••••••"
+                                        autocomplete="new-password">
+                                </div>
+                                <div class="validation-error"
+                                    *ngIf="camera.get('password')?.invalid && (camera.get('password')?.dirty || camera.get('password')?.touched)">
+                                    <span *ngIf="camera.get('password')?.errors?.['required']">Password is
+                                        required.</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group checkbox-group">
+                                <label class="toggle-label">
+                                    <span>Active</span>
+                                    <div class="toggle-switch">
+                                        <input type="checkbox" formControlName="isActive">
+                                        <span class="slider"></span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="channels-section" formArrayName="channels">
+                            <div class="channels-header">
+                                <h4>Channels</h4>
+                                <button *ngIf="!isEditing" type="button" class="add-channel-btn"
+                                    (click)="addChannel(camIndex)">
+                                    <lucide-icon name="plus"></lucide-icon> Add Channel
+                                </button>
+                            </div>
+                            <div class="channel-list">
+                                <div *ngFor="let ch of getChannels(camIndex).controls; let chIndex=index"
+                                    [formGroupName]="chIndex" class="channel-row">
+                                    <div class="channel-inputs">
+                                        <div class="form-group">
+                                            <label *ngIf="chIndex === 0">Channel #</label>
+                                            <div class="input-wrapper">
+                                                <input type="text" formControlName="channel" placeholder="1">
+                                            </div>
+                                            <div class="validation-error"
+                                                *ngIf="ch.get('channel')?.invalid && (ch.get('channel')?.dirty || ch.get('channel')?.touched)">
+                                                <span *ngIf="ch.get('channel')?.errors?.['required']">Channel # is
+                                                    required.</span>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label *ngIf="chIndex === 0">Name</label>
+                                            <div class="input-wrapper">
+                                                <input type="text" formControlName="name"
+                                                    placeholder="e.g. Main Entrance">
+                                            </div>
+                                            <div class="validation-error"
+                                                *ngIf="ch.get('name')?.invalid && (ch.get('name')?.dirty || ch.get('name')?.touched)">
+                                                <span *ngIf="ch.get('name')?.errors?.['required']">Name is
+                                                    required.</span>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label *ngIf="chIndex === 0">Location</label>
+                                            <div class="input-wrapper">
+                                                <input type="text" formControlName="location" placeholder="e.g. Gate A">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button *ngIf="getChannels(camIndex).length > 1 && !isEditing" type="button"
+                                        class="remove-ch-btn" (click)="removeChannel(camIndex, chIndex)">
+                                        <lucide-icon name="x"></lucide-icon>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button *ngIf="!isEditing" type="button" class="add-device-btn" (click)="addCamera()">
+                        <lucide-icon name="plus-circle"></lucide-icon> Add Another Device
+                    </button>
+                    <div class="right-actions">
+                        <button type="button" class="cancel-btn" (click)="closeModal()"
+                            [disabled]="isSaving">Cancel</button>
+                        <button type="submit" class="submit-btn" [disabled]="!registrationForm.valid || isSaving">
+                            <lucide-icon *ngIf="isSaving" name="loader-2" class="spin"></lucide-icon>
+                            <lucide-icon *ngIf="!isSaving" name="save"></lucide-icon>
+                            {{ isEditing ? 'Update Device' : 'Save Devices' }}
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bulk Upload Modal -->
+    <div class="modal-overlay" *ngIf="isBulkUploadModalOpen" (click)="closeBulkUploadModal()">
+        <div class="modal-content glass-morphism bulk-upload-modal" (click)="$event.stopPropagation()">
+            <div class="modal-header" style="margin-bottom: 1.5rem;">
+                <h2 class="gradient-text" style="font-size: 1.25rem;">Bulk Import Cameras</h2>
+                <button class="close-btn" (click)="closeBulkUploadModal()">
+                    <lucide-icon name="x"></lucide-icon>
+                </button>
+            </div>
+
+            <div class="bulk-upload-content management-form" style="display: flex; gap: 1rem; flex-direction: column;">
+                <div class="step-card nested-glass form-grid" style="padding: 1rem; margin-bottom: 0;">
+                    <div class="step-header full-width"
+                        style="margin-bottom: 0.5rem; display: flex; align-items: center;">
+                        <div class="step-number" style="width: 24px; height: 24px; font-size: 0.8rem;">1</div>
+                        <h3 style="font-size: 1rem; margin-left: 0.5rem; flex: 1;">Download Template</h3>
+                        <button type="button" class="btn-secondary" (click)="downloadTemplate()"
+                            style="padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.85rem;">
+                            <lucide-icon name="download" style="width: 14px; height: 14px;"></lucide-icon>
+                            <span>Download</span>
+                        </button>
+                    </div>
+                    <p class="step-desc full-width" style="margin-bottom: 0; font-size: 0.85rem;">Get the Excel template
+                        with the required format.</p>
+                </div>
+
+                <div class="step-card nested-glass form-grid" style="padding: 1rem;">
+                    <div class="step-header full-width" style="margin-bottom: 0.5rem;">
+                        <div class="step-number" style="width: 24px; height: 24px; font-size: 0.8rem;">2</div>
+                        <h3 style="font-size: 1rem; margin-left: 0.5rem;">Upload File</h3>
+                    </div>
+
+                    <div class="upload-zone full-width" (click)="triggerFileInput()"
+                        style="border: 2px dashed rgba(255, 255, 255, 0.2); border-radius: 8px; padding: 1.5rem; text-align: center; cursor: pointer; transition: all 0.3s ease; background: rgba(255, 255, 255, 0.02);">
+                        <div *ngIf="!isLoading" class="upload-idle">
+                            <lucide-icon name="upload-cloud" class="upload-icon"
+                                style="font-size: 2rem; color: var(--primary-color); margin-bottom: 0.5rem; opacity: 0.8;"></lucide-icon>
+                            <p style="margin-bottom: 0.25rem; font-weight: 500; font-size: 0.9rem;">Click to browse file
+                            </p>
+                            <span class="file-hint" style="font-size: 0.75rem; color: var(--text-muted);">Formats:
+                                .xlsx, .xls, .csv</span>
+                        </div>
+                        <div *ngIf="isLoading" class="upload-loading"
+                            style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
+                            <div class="spinner" style="width: 1.5rem; height: 1.5rem;"></div>
+                            <p style="font-size: 0.9rem;">Uploading cameras...</p>
+                        </div>
+                    </div>
+                    <input type="file" #fileInput hidden accept=".xlsx, .xls, .csv" (change)="onFileSelected($event)">
+                </div>
+            </div>
+
+            <div class="modal-footer" style="justify-content: flex-end; margin-top: 1.5rem;">
+                <button type="button" class="cancel-btn" (click)="closeBulkUploadModal()" [disabled]="isLoading"
+                    style="padding: 0.5rem 1rem; font-size: 0.9rem;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Dialog -->
+    <app-confirm-modal [isOpen]="isConfirmModalOpen"
+        [title]="bulkConfirmTitle || (deviceToDelete ? 'Delete Camera Device' : 'Delete Camera Channel')"
+        [message]="bulkConfirmMessage || (deviceToDelete ? 'Are you sure you want to delete this device and all its channels? (' + deviceToDelete.ipAddress + ')' : 'Are you sure you want to delete \'' + (itemToDelete?.name || 'this camera channel') + '\'? This action cannot be undone.')"
+        [confirmText]="bulkConfirmBtnText || (deviceToDelete ? 'Delete Device' : 'Delete Camera')"
+        [isLoading]="isSaving" (confirm)="executeDelete()" (cancel)="cancelDelete()">
+    </app-confirm-modal>
+</div>

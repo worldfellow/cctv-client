@@ -1,0 +1,30 @@
+<div class="card glass-morphism" (click)="onClick()" [class.offline]="feed.status === 'offline'">
+    <div class="thumbnail-wrapper">
+        <ng-container *ngIf="feed.wsUrl && feed.status === 'online'; else useThumbnail">
+            <canvas #canvas class="thumbnail"></canvas>
+        </ng-container>
+        <ng-template #useThumbnail>
+            <img [src]="feed.thumbnail" [alt]="feed.name" class="thumbnail">
+        </ng-template>
+        <div class="overlay">
+            <div class="status-badge" [class.online]="feed.status === 'online'">
+                <span class="dot"></span>
+                {{ feed.status | titlecase }}
+            </div>
+            <div class="play-btn">
+                <i data-lucide="maximize"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="info">
+        <div class="header">
+            <h3 class="name">{{ feed.name }}</h3>
+            <i data-lucide="video" class="icon" [class.online]="feed.status === 'online'"></i>
+        </div>
+        <div class="location">
+            <i data-lucide="map-pin"></i>
+            <span>{{ feed.location }}</span>
+        </div>
+    </div>
+</div>

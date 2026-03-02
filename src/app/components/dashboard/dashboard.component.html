@@ -1,0 +1,132 @@
+<div class="content-body" *ngIf="!isLoading">
+    <!-- Dashboard Header Controls -->
+    <div class="dashboard-header glass-morphism">
+        <div class="header-main">
+            <h1 class="title gradient-text">Surveillance Dashboard</h1>
+            <p class="subtitle">Real-time monitoring and analytics</p>
+        </div>
+
+        <div class="header-actions">
+            <div class="filter-group">
+                <label>College</label>
+                <div class="custom-dropdown" (click)="$event.stopPropagation()">
+                    <div class="dropdown-trigger" (click)="toggleCollegeDropdown(); $event.stopPropagation()"
+                        [class.active]="showCollegeDropdown">
+                        <i data-lucide="building-2"></i>
+                        <span>{{ selectedCollegeName }}</span>
+                        <i data-lucide="chevron-down" class="arrow"></i>
+                    </div>
+
+                    <div class="dropdown-menu glass-morphism" *ngIf="showCollegeDropdown">
+                        <div class="search-container">
+                            <i data-lucide="search"></i>
+                            <input type="text" class="college-search-input" placeholder="Search colleges..."
+                                [(ngModel)]="collegeSearchQuery" (input)="filterColleges()"
+                                (click)="$event.stopPropagation()">
+                        </div>
+                        <div class="options-list">
+                            <div class="option" *ngFor="let college of filteredColleges"
+                                [class.selected]="college.id === selectedCollegeId" (click)="selectCollege(college)">
+                                {{ college.name }}
+                            </div>
+                            <div class="no-results" *ngIf="filteredColleges.length === 0">
+                                No colleges found
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Limit Selection -->
+            <div class="limit-select">
+                <span class="label">Show</span>
+                <div class="limit-controls">
+                    <div class="limit-buttons">
+                        <button *ngFor="let opt of limitOptions" [class.active]="pageSize === opt"
+                            (click)="onLimitChange(opt)">{{ opt }}</button>
+                    </div>
+                    <button class="reset-btn" (click)="resetLimit()" title="Reset to 10">
+                        <i data-lucide="refresh-cw"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Summary -->
+    <div class="stats-row">
+        <div class="stat-card glass-morphism">
+            <div class="stat-icon info"><i data-lucide="video"></i></div>
+            <div class="stat-data">
+                <span class="label">Total Camera</span>
+                <span class="value">{{ stats.total }}</span>
+            </div>
+        </div>
+        <div class="stat-card glass-morphism">
+            <div class="stat-icon online"><i data-lucide="check-circle"></i></div>
+            <div class="stat-data">
+                <span class="label">Total Active</span>
+                <span class="value">{{ stats.active }}</span>
+            </div>
+        </div>
+        <div class="stat-card glass-morphism">
+            <div class="stat-icon offline"><i data-lucide="alert-triangle"></i></div>
+            <div class="stat-data">
+                <span class="label">Total Offline</span>
+                <span class="value">{{ stats.offline }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feed Grid -->
+    <div class="feed-grid-container">
+        <div class="grid-header">
+            <h2 class="section-title">Live Feeds</h2>
+            <div class="grid-stats" *ngIf="totalItems > 0">
+                Showing {{ (currentPage - 1) * pageSize + 1 }} - {{ Math.min(currentPage * pageSize, totalItems) }} of
+                {{ totalItems }} channels
+            </div>
+        </div>
+
+        <div class="feed-grid" *ngIf="feeds.length > 0; else noFeeds">
+            <app-cctv-card *ngFor="let feed of feeds" [feed]="feed" (viewDetail)="onViewDetail($event)"></app-cctv-card>
+        </div>
+
+        <ng-template #noFeeds>
+            <div class="empty-state glass-morphism">
+                <i data-lucide="video-off"></i>
+                <p>No active feeds found for this college.</p>
+            </div>
+        </ng-template>
+    </div>
+
+    <!-- Pagination Footer -->
+    <div class="pagination-footer" *ngIf="totalPages > 1">
+        <button class="page-btn glass-morphism" [disabled]="currentPage === 1" (click)="onPageChange(currentPage - 1)">
+            <i data-lucide="chevron-left"></i>
+            <span>Previous</span>
+        </button>
+
+        <div class="page-numbers">
+            <span class="current">Page {{ currentPage }}</span>
+            <span class="separator">of</span>
+            <span class="total">{{ totalPages }}</span>
+        </div>
+
+        <button class="page-btn glass-morphism" [disabled]="currentPage === totalPages"
+            (click)="onPageChange(currentPage + 1)">
+            <span>Next</span>
+            <i data-lucide="chevron-right"></i>
+        </button>
+    </div>
+</div>
+
+<!-- Loading State -->
+<div class="loading-state" *ngIf="isLoading">
+    <div class="loader-container">
+        <div class="loader"></div>
+        <p>Synchronizing secure feeds...</p>
+    </div>
+</div>
+
+<!-- Full View Modal -->
+<app-cctv-viewer *ngIf="selectedFeed" [feed]="selectedFeed" (close)="onCloseViewer()"></app-cctv-viewer>

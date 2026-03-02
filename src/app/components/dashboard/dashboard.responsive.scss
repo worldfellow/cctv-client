@@ -1,0 +1,98 @@
+/* Dashboard Responsive Styles */
+
+@media (max-width: 1200px) {
+    .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.5rem;
+        padding: 1.5rem;
+
+        .header-actions {
+            width: 100%;
+            flex-wrap: wrap;
+        }
+    }
+
+    .stats-row {
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 860px) {
+    .header-actions {
+        .control-group {
+            flex: 1;
+            min-width: 140px;
+        }
+    }
+
+    .stats-row {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .dashboard-header {
+        .header-main {
+            .title {
+                font-size: 1.4rem;
+            }
+        }
+    }
+
+    .header-actions {
+        flex-direction: column;
+
+        .control-group {
+            width: 100%;
+        }
+
+        .add-widget-btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    .stats-row {
+        grid-template-columns: 1fr;
+    }
+
+    .feed-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .pagination-footer {
+        flex-direction: column;
+        gap: 1.5rem;
+
+        .page-btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-header {
+        padding: 1rem;
+    }
+
+    .stat-card {
+        padding: 1.25rem;
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+
+            i,
+            ::ng-deep svg {
+                width: 24px;
+                height: 24px;
+            }
+        }
+
+        .stat-data .value {
+            font-size: 1.4rem;
+        }
+    }
+}

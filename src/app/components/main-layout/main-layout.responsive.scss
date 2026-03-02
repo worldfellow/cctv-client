@@ -1,0 +1,109 @@
+/* Main Layout Responsive Styles */
+
+@media (max-width: 768px) {
+    .dashboard-layout {
+        flex-direction: column;
+    }
+
+    /* Sidebar Mobile */
+    .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 280px;
+        transform: translateX(-110%);
+        z-index: 1000;
+        background: var(--bg-dark);
+        border-radius: 0 !important;
+        border-right: 1px solid var(--card-border) !important;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+
+        &.open {
+            transform: translateX(0);
+        }
+
+        /* Override collapsed state styles for mobile when menu is open */
+        &.collapsed {
+            width: 280px;
+            padding: 1.5rem;
+
+            .logo-text,
+            span,
+            .badge,
+            .user-info {
+                display: block;
+                /* Force show content */
+            }
+
+            .logo {
+                justify-content: flex-start;
+            }
+
+            .nav-item {
+                justify-content: flex-start;
+                padding: 0.75rem 1rem;
+            }
+
+            .logout-btn {
+                justify-content: flex-start;
+            }
+        }
+    }
+
+    /* Sidebar Overlay */
+    .sidebar-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        z-index: 999;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+
+        &.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    }
+
+    /* Main Content Mobile */
+    .main-content {
+        width: 100%;
+        padding: 1rem;
+    }
+
+    /* Top Nav Mobile */
+    .top-nav {
+        padding: 0.75rem 1rem;
+        gap: 1rem;
+
+        .nav-left {
+            gap: 0.75rem;
+
+            .page-title {
+                font-size: 1.1rem;
+            }
+        }
+
+        .nav-right {
+            gap: 1rem;
+        }
+    }
+
+    /* Search Box Mobile */
+    .search-box {
+        display: none;
+        /* Hide search on mobile for now, or make it toggleable */
+    }
+
+    /* User Profile Mobile */
+    .user-profile {
+        .user-info {
+            display: none;
+            /* Hide name/role on mobile */
+        }
+    }
+}

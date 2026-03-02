@@ -1,0 +1,446 @@
+<div class="user-management-container">
+    <div class="header-section">
+        <div class="title-info">
+            <h1 class="gradient-text">User Management</h1>
+            <p class="subtitle">Manage system access and permissions</p>
+        </div>
+        <div class="actions">
+            <div class="search-box tooltip">
+                <lucide-icon name="search"></lucide-icon>
+                <span class="tooltip-text">Search Users</span>
+                <input type="text" placeholder="Search users..." [(ngModel)]="searchQuery" (keyup.enter)="onSearch()"
+                    (input)="onSearch()">
+            </div>
+            <button class="btn-secondary tooltip" (click)="openBulkUploadModal()">
+                <lucide-icon name="folder-up"></lucide-icon>
+                <span>Bulk Import</span>
+                <span class="tooltip-text">Bulk Import Users</span>
+            </button>
+            <button class="add-user-btn tooltip" (click)="openAddModal()">
+                <lucide-icon name="user-plus"></lucide-icon>
+                <span>Add User</span>
+                <span class="tooltip-text">Add New User</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Bulk Action Bar -->
+    <div class="bulk-action-bar glass-morphism" *ngIf="selectedUserIds.size > 0">
+        <div class="selection-info tooltip">
+            <i data-lucide="check-square"></i>
+            <span class="tooltip-text">Selection Mode</span>
+            <span>{{ selectedUserIds.size }} user(s) selected</span>
+        </div>
+        <div class="bulk-actions">
+            <button class="bulk-btn activate tooltip" (click)="bulkActivate()">
+                <i data-lucide="user-check"></i>
+                <span>Activate</span>
+                <span class="tooltip-text">Activate Selected Users</span>
+            </button>
+            <button class="bulk-btn deactivate tooltip" (click)="bulkDeactivate()">
+                <i data-lucide="user-x"></i>
+                <span>Deactivate</span>
+                <span class="tooltip-text">Deactivate Selected Users</span>
+            </button>
+            <button class="bulk-btn delete tooltip" (click)="bulkDelete()">
+                <i data-lucide="trash-2"></i>
+                <span>Delete</span>
+                <span class="tooltip-text">Delete Selected Users</span>
+            </button>
+            <button class="bulk-btn clear tooltip" (click)="clearSelection()">
+                <i data-lucide="x"></i>
+                <span>Clear</span>
+                <span class="tooltip-text">Clear Selection</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="table-card glass-morphism">
+        <div class="table-container">
+            <table class="user-table">
+                <thead>
+                    <tr>
+                        <th class="checkbox-col">
+                            <label class="custom-checkbox">
+                                <input type="checkbox" [checked]="isAllSelected" (change)="toggleSelectAll()">
+                                <span class="checkmark"></span>
+                            </label>
+                        </th>
+                        <th>User</th>
+                        <th>Mobile</th>
+                        <th>Role</th>
+                        <th>College</th>
+                        <th>Status</th>
+                        <th>Joined</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody [class.loading-fade]="isLoading">
+                    <tr *ngFor="let user of users" [class.selected-row]="selectedUserIds.has(user.id!)">
+                        <td class="checkbox-col">
+                            <label class="custom-checkbox">
+                                <input type="checkbox" [checked]="selectedUserIds.has(user.id!)"
+                                    (change)="toggleSelect(user.id!)">
+                                <span class="checkmark"></span>
+                            </label>
+                        </td>
+                        <td>
+                            <div class="user-cell">
+                                <div class="avatar">
+                                    <img [src]="'https://ui-avatars.com/api/?name=' + user.firstName + '+' + user.lastName + '&background=6366f1&color=fff'"
+                                        alt="">
+                                </div>
+                                <div class="user-info">
+                                    <span class="name">{{ user.firstName }} {{ user.lastName }}</span>
+                                    <span class="email">{{ user.email }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td data-label="Mobile">
+                            <span class="mobile">{{ user.mobileNo }}</span>
+                        </td>
+                        <td data-label="Role">
+                            <span class="role-badge">{{ user.role }}</span>
+                        </td>
+                        <td data-label="College">
+                            <span class="college-info">{{ user.College?.name || 'N/A' }}</span>
+                        </td>
+                        <td data-label="Status">
+                            <label class="status-toggle"
+                                [title]="user.isActive ? 'Active — click to deactivate' : 'Inactive — click to activate'">
+                                <input type="checkbox" [checked]="user.isActive !== false"
+                                    (change)="toggleStatus(user)">
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label" [class.active]="user.isActive !== false"
+                                    [class.inactive]="user.isActive === false">
+                                    {{ user.isActive !== false ? 'Active' : 'Inactive' }}
+                                </span>
+                            </label>
+                        </td>
+                        <td data-label="Joined">
+                            <span class="joined-date">{{ user.createdAt | date:'shortDate' }}</span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="action-btn edit tooltip" (click)="openEditModal(user)">
+                                    <i data-lucide="edit-3"></i>
+                                    <span class="tooltip-text">Edit User</span>
+                                </button>
+                                <button class="action-btn reset tooltip" (click)="resetPassword(user)">
+                                    <i data-lucide="key"></i>
+                                    <span class="tooltip-text">Reset Password</span>
+                                </button>
+                                <button class="action-btn delete tooltip" (click)="deleteUser(user.id!)">
+                                    <i data-lucide="trash-2"></i>
+                                    <span class="tooltip-text">Delete User</span>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Loading State -->
+                    <tr *ngIf="isLoading">
+                        <td colspan="8">
+                            <div class="table-loading">
+                                <div class="spinner"></div>
+                                <span>Fetching user records...</span>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Empty State -->
+                    <tr *ngIf="users.length === 0 && !isLoading">
+                        <td colspan="8">
+                            <div class="enhanced-empty-state">
+                                <div class="illustration">
+                                    <i data-lucide="users" class="bg-icon"></i>
+                                    <div class="main-icon-wrapper">
+                                        <i data-lucide="search-x" class="main-icon"></i>
+                                    </div>
+                                </div>
+                                <h3>No Users Found</h3>
+                                <p>{{ searchQuery ? 'No users match "' + searchQuery + '". Try a different search term.'
+                                    : 'Start by adding your first system user to manage access.' }}</p>
+                                <button *ngIf="!searchQuery" class="add-btn-empty" (click)="openCreateModal()">
+                                    <i data-lucide="plus"></i>
+                                    <span>Add First User</span>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination Footer -->
+        <div class="pagination-footer" *ngIf="users.length > 0">
+            <div class="page-size-selector">
+                <span>Items per page:</span>
+                <select [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+                    <option [ngValue]="5">5</option>
+                    <option [ngValue]="10">10</option>
+                    <option [ngValue]="20">20</option>
+                    <option [ngValue]="50">50</option>
+                </select>
+            </div>
+            <div class="pagination-info">
+                Showing <span>{{ (currentPage - 1) * pageSize + 1 }}</span> to
+                <span>{{ (currentPage * pageSize) > totalUsers ? totalUsers : (currentPage * pageSize) }}</span> of
+                <span>{{ totalUsers }}</span> users
+            </div>
+            <div class="pagination-controls">
+                <button class="page-btn tooltip" (click)="prevPage()" [disabled]="currentPage === 1">
+                    <i data-lucide="chevron-left"></i>
+                    <span>Previous</span>
+                    <span class="tooltip-text">Previous Page</span>
+                </button>
+                <div class="page-numbers">
+                    <span class="current-page">Page {{ currentPage }} of {{ totalPages }}</span>
+                </div>
+                <button class="page-btn tooltip" (click)="nextPage()" [disabled]="currentPage === totalPages">
+                    <span>Next</span>
+                    <i data-lucide="chevron-right"></i>
+                    <span class="tooltip-text">Next Page</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Modal -->
+    <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+        <div class="modal-content glass-morphism" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h2 class="gradient-text">{{ isEditing ? 'Edit User' : 'Create New User' }}</h2>
+                <button class="close-btn tooltip" (click)="closeModal()">
+                    <i data-lucide="x"></i>
+                    <span class="tooltip-text">Close</span>
+                </button>
+            </div>
+
+            <form #userForm="ngForm" (ngSubmit)="saveUser()" class="user-form">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>First Name</label>
+                        <div class="input-wrapper">
+                            <i data-lucide="user" class="input-icon"></i>
+                            <input type="text" name="firstName" [(ngModel)]="currentUser.firstName" #firstName="ngModel"
+                                placeholder="Enter first name" required>
+                        </div>
+                        <div *ngIf="firstName.invalid && (firstName.dirty || firstName.touched)"
+                            class="validation-error">
+                            <span *ngIf="firstName.errors?.['required']">First name is required.</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Last Name</label>
+                        <div class="input-wrapper">
+                            <i data-lucide="user" class="input-icon"></i>
+                            <input type="text" name="lastName" [(ngModel)]="currentUser.lastName" #lastName="ngModel"
+                                placeholder="Enter last name" required>
+                        </div>
+                        <div *ngIf="lastName.invalid && (lastName.dirty || lastName.touched)" class="validation-error">
+                            <span *ngIf="lastName.errors?.['required']">Last name is required.</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <div class="input-wrapper">
+                            <i data-lucide="mail" class="input-icon"></i>
+                            <input type="email" name="email" [(ngModel)]="currentUser.email" #email="ngModel"
+                                placeholder="Enter email" required email>
+                        </div>
+                        <div *ngIf="email.invalid && (email.dirty || email.touched)" class="validation-error">
+                            <span *ngIf="email.errors?.['required']">Email is required.</span>
+                            <span *ngIf="email.errors?.['email']">Please enter a valid email address.</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Mobile Number</label>
+                        <div class="input-wrapper">
+                            <i data-lucide="phone" class="input-icon"></i>
+                            <input type="text" name="mobileNo" [(ngModel)]="currentUser.mobileNo" #mobileNo="ngModel"
+                                placeholder="Enter mobile" required pattern="^[0-9]{10}$">
+                        </div>
+                        <div *ngIf="mobileNo.invalid && (mobileNo.dirty || mobileNo.touched)" class="validation-error">
+                            <span *ngIf="mobileNo.errors?.['required']">Mobile number is required.</span>
+                            <span *ngIf="mobileNo.errors?.['pattern']">Please enter a valid 10-digit mobile
+                                number.</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Role</label>
+                        <div class="input-wrapper">
+                            <i data-lucide="shield" class="input-icon"></i>
+                            <select name="role" [(ngModel)]="currentUser.role" #role="ngModel" required>
+                                <option value="SUPER_ADMIN">SUPER ADMIN</option>
+                                <option value="ADMIN">ADMIN</option>
+                                <option value="OPERATOR">OPERATOR</option>
+                                <option value="VIEWER">VIEWER</option>
+                            </select>
+                        </div>
+                        <div *ngIf="role.invalid && (role.dirty || role.touched)" class="validation-error">
+                            <span *ngIf="role.errors?.['required']">Role is required.</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group" *ngIf="currentUser.role !== 'SUPER_ADMIN'">
+                        <label>College</label>
+                        <div class="custom-dropdown">
+                            <div class="dropdown-trigger" (click)="toggleCollegeDropdown($event)"
+                                [class.active]="showCollegeDropdown">
+                                <i data-lucide="building-2"></i>
+                                <span>{{ selectedCollegeName }}</span>
+                                <i data-lucide="chevron-down" class="arrow"></i>
+                            </div>
+
+                            <div class="dropdown-menu" *ngIf="showCollegeDropdown" (click)="$event.stopPropagation()">
+                                <div class="search-container">
+                                    <i data-lucide="search"></i>
+                                    <input type="text" [(ngModel)]="collegeSearch" name="collegeSearch"
+                                        placeholder="Search college..." (click)="$event.stopPropagation()">
+                                </div>
+                                <div class="options-list">
+                                    <div class="option" *ngFor="let college of filteredColleges"
+                                        (click)="selectCollege(college)"
+                                        [class.selected]="currentUser.collegeId === college.id">
+                                        {{ college.name }}
+                                    </div>
+                                    <div class="no-results" *ngIf="filteredColleges.length === 0">
+                                        No colleges found
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="collegeId" [(ngModel)]="currentUser.collegeId" #collegeId="ngModel"
+                            required>
+                        <div *ngIf="collegeId.invalid && (collegeId.dirty || collegeId.touched)"
+                            class="validation-error">
+                            <span *ngIf="collegeId.errors?.['required']">College selection is required.</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" (click)="closeModal()">Cancel</button>
+                    <button type="submit" class="save-btn" [disabled]="!userForm.form.valid || isSaving">
+                        <span class="spinner" *ngIf="isSaving"></span>
+                        {{ isSaving ? (isEditing ? 'Updating...' : 'Creating...') : (isEditing ? 'Update User' : 'Create
+                        User') }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bulk Upload Modal -->
+    <div class="modal-overlay" *ngIf="isBulkUploadModalOpen" (click)="closeBulkUploadModal()">
+        <div class="modal-container bulk-modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <div class="header-content">
+                    <div class="title-row">
+                        <lucide-icon name="folder-up" class="title-icon"></lucide-icon>
+                        <h3>Bulk Import Users</h3>
+                    </div>
+                    <p class="subtitle">Upload an Excel file to add multiple users at once</p>
+                </div>
+                <button class="btn-close tooltip" (click)="closeBulkUploadModal()">
+                    <lucide-icon name="x"></lucide-icon>
+                    <span class="tooltip-text">Close</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Step 1: Download Template -->
+                <div class="template-section">
+                    <div class="info-card">
+                        <lucide-icon name="info"></lucide-icon>
+                        <p>First, download our Excel template to ensure your data is formatted correctly.</p>
+                        <button class="btn-outline" (click)="downloadTemplate()">
+                            <lucide-icon name="download"></lucide-icon>
+                            <span>Download Template</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Upload File -->
+                <div class="upload-section" *ngIf="!uploadResults">
+                    <div class="upload-zone" [class.has-file]="selectedFile" (drop)="onFileDropped($event)"
+                        (dragover)="onDragOver($event)" (click)="fileInput.click()">
+                        <input type="file" #fileInput (change)="onFileSelected($event)" accept=".xlsx" hidden>
+
+                        <div class="zone-content">
+                            <lucide-icon name="upload-cloud" *ngIf="!selectedFile"></lucide-icon>
+                            <lucide-icon name="file-check" *ngIf="selectedFile" class="active"></lucide-icon>
+                            <div class="text-group">
+                                <h4 *ngIf="!selectedFile">Click or drag Excel file to upload</h4>
+                                <h4 *ngIf="selectedFile">{{ selectedFile.name }}</h4>
+                                <p *ngIf="!selectedFile">Supports .xlsx files (Max 5MB)</p>
+                                <p *ngIf="selectedFile">{{ (selectedFile.size / 1024).toFixed(2) }} KB</p>
+                            </div>
+                            <button class="save-btn" *ngIf="selectedFile"
+                                (click)="$event.stopPropagation(); uploadFile()" [disabled]="isUploading">
+                                <lucide-icon name="play" *ngIf="!isUploading"></lucide-icon>
+                                <span class="spinner" *ngIf="isUploading"></span>
+                                {{ isUploading ? 'Processing...' : 'Start Upload' }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Error List -->
+                    <div class="error-container" *ngIf="bulkUploadErrors.length > 0">
+                        <div class="error-header">
+                            <lucide-icon name="alert-circle"></lucide-icon>
+                            <span>Validation Errors ({{ bulkUploadErrors.length }})</span>
+                        </div>
+                        <ul class="error-list">
+                            <li *ngFor="let err of bulkUploadErrors">{{ err }}</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Step 3: Success Results -->
+                <div class="results-section" *ngIf="uploadResults">
+                    <div class="result-card" [class.success]="uploadResults.success > 0">
+                        <div class="status-icon">
+                            <lucide-icon name="check-circle" *ngIf="uploadResults.failed === 0"></lucide-icon>
+                            <lucide-icon name="alert-triangle" *ngIf="uploadResults.failed > 0"></lucide-icon>
+                        </div>
+                        <h3>Upload Completed</h3>
+                        <p>{{ uploadResults.message }}</p>
+
+                        <div class="stats-row">
+                            <div class="stat-item success">
+                                <span class="val">{{ uploadResults.results.success }}</span>
+                                <span class="lbl">Successful</span>
+                            </div>
+                            <div class="stat-item failed">
+                                <span class="val">{{ uploadResults.results.failed }}</span>
+                                <span class="lbl">Failed</span>
+                            </div>
+                        </div>
+
+                        <div class="failure-details" *ngIf="uploadResults.results.details.length > 0">
+                            <h4>Failure Details:</h4>
+                            <div class="details-list">
+                                <div class="detail" *ngFor="let detail of uploadResults.results.details">
+                                    {{ detail }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="save-btn" (click)="closeBulkUploadModal()">Done</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Dialog -->
+    <app-confirm-modal [isOpen]="isConfirmModalOpen" [title]="confirmModalTitle" [message]="confirmModalMessage"
+        [confirmText]="confirmModalBtnText" [isLoading]="isSaving" (confirm)="executeConfirmAction()"
+        (cancel)="cancelConfirmAction()">
+    </app-confirm-modal>
+</div>

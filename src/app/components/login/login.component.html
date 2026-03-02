@@ -1,0 +1,99 @@
+<div class="login-container">
+    <div class="background-decor">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
+    <div class="login-card glass-morphism" *ngIf="!showChangePassword">
+        <div class="login-header">
+            <div class="logo">
+                <i data-lucide="shield" class="logo-icon"></i>
+            </div>
+            <h1 class="gradient-text">Vision Express</h1>
+            <p class="subtitle">Secure Surveillance Access</p>
+        </div>
+
+        <form (ngSubmit)="onLogin()" #loginForm="ngForm" class="login-form">
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <div class="input-wrapper">
+                    <i data-lucide="mail" class="input-icon"></i>
+                    <input type="email" id="email" name="email" [(ngModel)]="loginData.email"
+                        placeholder="Enter your email address" required email>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="input-wrapper">
+                    <i data-lucide="lock" class="input-icon"></i>
+                    <input type="password" id="password" name="password" [(ngModel)]="loginData.password"
+                        placeholder="Enter your password" required>
+                </div>
+            </div>
+
+            <div *ngIf="errorMessage" class="error-message">
+                <i data-lucide="alert-circle"></i>
+                <span>{{ errorMessage }}</span>
+            </div>
+
+            <button type="submit" class="login-btn" [disabled]="!loginForm.form.valid || isLoading">
+                <span *ngIf="!isLoading">Sign In</span>
+                <span *ngIf="isLoading" class="loader"></span>
+                <i *ngIf="!isLoading" data-lucide="arrow-right"></i>
+            </button>
+        </form>
+
+        <div class="login-footer">
+            <p>Forgot access credentials? <a href="#">Contact Admin</a></p>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div class="login-card glass-morphism change-password-card" *ngIf="showChangePassword">
+        <div class="login-header">
+            <div class="logo">
+                <i data-lucide="key-round" class="logo-icon"></i>
+            </div>
+            <h1 class="gradient-text">Update Password</h1>
+            <p class="subtitle">Please set a new password to continue</p>
+        </div>
+
+        <form (ngSubmit)="onChangePassword()" #changeForm="ngForm" class="login-form">
+            <div class="form-group">
+                <label for="newPassword">New Password</label>
+                <div class="input-wrapper">
+                    <i data-lucide="lock" class="input-icon"></i>
+                    <input type="password" id="newPassword" name="newPassword"
+                        [(ngModel)]="changePasswordData.newPassword" placeholder="Enter new password" required
+                        minlength="6">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password</label>
+                <div class="input-wrapper">
+                    <i data-lucide="lock" class="input-icon"></i>
+                    <input type="password" id="confirmPassword" name="confirmPassword"
+                        [(ngModel)]="changePasswordData.confirmPassword" placeholder="Confirm new password" required
+                        minlength="6">
+                </div>
+            </div>
+
+            <div *ngIf="changePasswordError" class="error-message">
+                <i data-lucide="alert-circle"></i>
+                <span>{{ changePasswordError }}</span>
+            </div>
+
+            <button type="submit" class="login-btn" [disabled]="!changeForm.form.valid || isChangingPassword">
+                <span *ngIf="!isChangingPassword">Update Password</span>
+                <span *ngIf="isChangingPassword" class="loader"></span>
+                <i *ngIf="!isChangingPassword" data-lucide="check"></i>
+            </button>
+        </form>
+
+        <div class="login-footer">
+            <p>You must update your password on first login</p>
+        </div>
+    </div>
+</div>

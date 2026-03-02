@@ -1,0 +1,107 @@
+<div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar glass-morphism" [class.collapsed]="!isSidebarOpen" [class.open]="isSidebarOpen">
+        <div class="sidebar-header">
+            <div class="logo">
+                <i data-lucide="shield" class="logo-icon"></i>
+                <span class="logo-text">Vision Express</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a routerLink="/dashboard" routerLinkActive="active" class="nav-item" (click)="onNavClick()"
+                [attr.data-tooltip]="!isSidebarOpen ? 'Dashboard' : null">
+                <i data-lucide="layout-grid"></i>
+                <span>Dashboard</span>
+            </a>
+            <a routerLink="/users" routerLinkActive="active" class="nav-item" (click)="onNavClick()"
+                [attr.data-tooltip]="!isSidebarOpen ? 'User Management' : null">
+                <i data-lucide="users"></i>
+                <span>User Management</span>
+            </a>
+            <a routerLink="/colleges" routerLinkActive="active" class="nav-item" (click)="onNavClick()"
+                [attr.data-tooltip]="!isSidebarOpen ? 'Colleges' : null">
+                <i data-lucide="building-2"></i>
+                <span>Colleges</span>
+            </a>
+            <a routerLink="/add-camera" routerLinkActive="active" class="nav-item" (click)="onNavClick()"
+                [attr.data-tooltip]="!isSidebarOpen ? 'Camera Setup' : null">
+                <i data-lucide="video"></i>
+                <span>Camera Setup</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <button class="logout-btn" (click)="logout()" [attr.data-tooltip]="!isSidebarOpen ? 'Logout' : null">
+                <i data-lucide="log-out"></i>
+                <span>Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Mobile Sidebar Overlay -->
+    <div class="sidebar-overlay" [class.show]="isSidebarOpen && isMobile" (click)="toggleSidebar()"></div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="top-nav glass-morphism">
+            <div class="nav-left">
+                <button class="menu-toggle" (click)="toggleSidebar()">
+                    <i data-lucide="menu"></i>
+                </button>
+                <h2 class="page-title">Vision Express</h2>
+            </div>
+
+            <div class="nav-right">
+                <!-- Theme Switcher -->
+                <div class="theme-switcher">
+                    <button class="theme-toggle-btn" (click)="toggleThemeMenu()" title="Change Theme">
+                        <i data-lucide="palette"></i>
+                    </button>
+
+                    <div class="theme-menu glass-morphism" *ngIf="showThemeMenu" (click)="$event.stopPropagation()">
+                        <div class="menu-header">Select Theme</div>
+                        <div class="theme-options">
+                            <button class="theme-opt white" [class.active]="(themeService.theme$ | async) === 'white'"
+                                (click)="changeTheme('white')">
+                                <span class="preview"></span>
+                                <span>White</span>
+                            </button>
+                            <button class="theme-opt midnight"
+                                [class.active]="(themeService.theme$ | async) === 'midnight'"
+                                (click)="changeTheme('midnight')">
+                                <span class="preview"></span>
+                                <span>Midnight</span>
+                            </button>
+                            <button class="theme-opt obsidian"
+                                [class.active]="(themeService.theme$ | async) === 'obsidian'"
+                                (click)="changeTheme('obsidian')">
+                                <span class="preview"></span>
+                                <span>Obsidian Gold</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- <div class="search-box">
+                    <i data-lucide="search"></i>
+                    <input type="text" placeholder="Search..." [(ngModel)]="searchQuery">
+                </div> -->
+                <div class="user-profile" *ngIf="user$ | async as user">
+                    <div class="avatar">
+                        <img [src]="'https://ui-avatars.com/api/?name=' + (user.firstName + '+' + user.lastName) + '&background=6366f1&color=fff'"
+                            alt="User">
+                    </div>
+                    <div class="user-info">
+                        <span class="name">{{ user.firstName }} {{ user.lastName }}</span>
+                        <span class="role">{{ user.role }}</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="content-body">
+            <router-outlet></router-outlet>
+        </div>
+    </main>
+</div>

@@ -1,0 +1,323 @@
+<div class="management-container">
+    <div class="header-section">
+        <div class="title-info">
+            <h1 class="gradient-text">College Management</h1>
+            <p class="subtitle">Organize and manage partner institutions</p>
+        </div>
+        <div class="actions">
+            <div class="search-box">
+                <i data-lucide="search"></i>
+                <input type="text" placeholder="Search colleges..." [(ngModel)]="searchQuery" (keyup.enter)="onSearch()"
+                    (input)="onSearch()">
+            </div>
+
+            <button type="button" class="btn-secondary tooltip" (click)="openBulkUploadModal()">
+                <i data-lucide="folder-up"></i>
+                <span>Bulk Import</span>
+                <span class="tooltip-text">Bulk Import Colleges</span>
+            </button>
+
+            <button class="add-btn" (click)="openCreateModal()">
+                <i data-lucide="plus"></i>
+                <span>Register College</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Bulk Action Bar -->
+    <div class="bulk-action-bar glass-morphism" *ngIf="selectedCollegeIds.size > 0">
+        <div class="selection-info">
+            <i data-lucide="check-square"></i>
+            <span>{{ selectedCollegeIds.size }} college(s) selected</span>
+        </div>
+        <div class="bulk-actions">
+            <button class="bulk-btn activate tooltip" (click)="bulkActivate()">
+                <i data-lucide="check-circle"></i>
+                <span>Activate</span>
+                <span class="tooltip-text">Activate Selected Colleges</span>
+            </button>
+            <button class="bulk-btn deactivate tooltip" (click)="bulkDeactivate()">
+                <i data-lucide="x-circle"></i>
+                <span>Deactivate</span>
+                <span class="tooltip-text">Deactivate Selected Colleges</span>
+            </button>
+            <button class="bulk-btn delete tooltip" (click)="bulkDelete()">
+                <i data-lucide="trash-2"></i>
+                <span>Delete</span>
+                <span class="tooltip-text">Delete Selected Colleges</span>
+            </button>
+            <button class="bulk-btn clear tooltip" (click)="clearSelection()">
+                <i data-lucide="x"></i>
+                <span>Clear</span>
+                <span class="tooltip-text">Clear Selection</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="table-card glass-morphism">
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th class="checkbox-col">
+                            <label class="custom-checkbox">
+                                <input type="checkbox" [checked]="isAllSelected" (change)="toggleSelectAll()">
+                                <span class="checkmark"></span>
+                            </label>
+                        </th>
+                        <th>College Name</th>
+                        <th>Contact Email</th>
+                        <th>Address</th>
+                        <th>Status</th>
+                        <th>Registered</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody [class.loading-fade]="isLoading">
+                    <tr *ngFor="let college of colleges" [class.selected-row]="selectedCollegeIds.has(college.id)">
+                        <td class="checkbox-col">
+                            <label class="custom-checkbox">
+                                <input type="checkbox" [checked]="selectedCollegeIds.has(college.id)"
+                                    (change)="toggleSelect(college.id)">
+                                <span class="checkmark"></span>
+                            </label>
+                        </td>
+                        <td>
+                            <div class="college-cell">
+                                <div class="icon-box">
+                                    <i data-lucide="building-2"></i>
+                                </div>
+                                <span class="name">{{ college.name }}</span>
+                            </div>
+                        </td>
+                        <td data-label="Contact Email">
+                            <span class="email">{{ college.contactEmail || 'N/A' }}</span>
+                        </td>
+                        <td data-label="Address">
+                            <span class="address">{{ college.address || 'N/A' }}</span>
+                        </td>
+                        <td data-label="Status">
+                            <label class="status-toggle"
+                                [title]="college.isActive ? 'Active — click to deactivate' : 'Inactive — click to activate'">
+                                <input type="checkbox" [checked]="college.isActive !== false"
+                                    (change)="toggleStatus(college)">
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label" [class.active]="college.isActive !== false"
+                                    [class.inactive]="college.isActive === false">
+                                    {{ college.isActive !== false ? 'Active' : 'Inactive' }}
+                                </span>
+                            </label>
+                        </td>
+                        <td data-label="Registered">
+                            <span class="date">{{ (college.createdAt | date:'mediumDate') || 'Recently' }}</span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="action-btn edit tooltip" (click)="openEditModal(college)">
+                                    <i data-lucide="edit-3"></i>
+                                    <span class="tooltip-text">Edit College</span>
+                                </button>
+                                <button class="action-btn delete tooltip" (click)="deleteCollege(college.id)">
+                                    <i data-lucide="trash-2"></i>
+                                    <span class="tooltip-text">Delete College</span>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Loading State -->
+                    <tr *ngIf="isLoading">
+                        <td colspan="7">
+                            <div class="table-loading">
+                                <div class="spinner"></div>
+                                <span>Fetching institution data...</span>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Empty State -->
+                    <tr *ngIf="colleges.length === 0 && !isLoading">
+                        <td colspan="7">
+                            <div class="enhanced-empty-state">
+                                <div class="illustration">
+                                    <i data-lucide="building" class="bg-icon"></i>
+                                    <div class="main-icon-wrapper">
+                                        <i data-lucide="search-x" class="main-icon"></i>
+                                    </div>
+                                </div>
+                                <h3>No Institutions Found</h3>
+                                <p>{{ searchQuery ? 'No colleges match "' + searchQuery + '". Try a different search
+                                    term.' : 'Start by registering your first partner college to manage its CCTV feeds.'
+                                    }}</p>
+                                <button *ngIf="!searchQuery" class="add-btn-empty" (click)="openCreateModal()">
+                                    <i data-lucide="plus"></i>
+                                    <span>Register First College</span>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination Footer -->
+        <div class="pagination-footer" *ngIf="totalColleges > 0">
+            <div class="page-size-selector">
+                <span>Items per page:</span>
+                <select [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+                    <option [ngValue]="5">5</option>
+                    <option [ngValue]="10">10</option>
+                    <option [ngValue]="20">20</option>
+                    <option [ngValue]="50">50</option>
+                </select>
+            </div>
+            <div class="pagination-info">
+                Showing <span>{{ (currentPage - 1) * pageSize + 1 }}</span> to
+                <span>{{ (currentPage * pageSize) > totalColleges ? totalColleges : (currentPage * pageSize) }}</span>
+                of
+                <span>{{ totalColleges }}</span> entries
+            </div>
+            <div class="pagination-controls">
+                <button class="page-btn tooltip" (click)="prevPage()" [disabled]="currentPage === 1">
+                    <i data-lucide="chevron-left"></i>
+                    <span>Previous</span>
+                    <span class="tooltip-text">Previous Page</span>
+                </button>
+                <div class="page-numbers">
+                    <span class="current-page">Page {{ currentPage }} of {{ totalPages }}</span>
+                </div>
+                <button class="page-btn tooltip" (click)="nextPage()" [disabled]="currentPage === totalPages">
+                    <span>Next</span>
+                    <i data-lucide="chevron-right"></i>
+                    <span class="tooltip-text">Next Page</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- College Modal -->
+    <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+        <div class="modal-content glass-morphism" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h2 class="gradient-text">{{ isEditing ? 'Edit College' : 'Register College' }}</h2>
+                <button class="close-btn" (click)="closeModal()">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+
+            <form #collegeForm="ngForm" (ngSubmit)="saveCollege()" class="management-form">
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label>College Name</label>
+                        <div class="input-wrapper">
+                            <i data-lucide="building-2" class="input-icon"></i>
+                            <input type="text" name="name" [(ngModel)]="currentCollege.name" #name="ngModel"
+                                placeholder="Enter college name" required>
+                        </div>
+                        <div *ngIf="name.invalid && (name.dirty || name.touched)" class="validation-error">
+                            <span *ngIf="name.errors?.['required']">College name is required.</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Contact Email</label>
+                        <div class="input-wrapper">
+                            <i data-lucide="mail" class="input-icon"></i>
+                            <input type="email" name="contactEmail" [(ngModel)]="currentCollege.contactEmail"
+                                #contactEmail="ngModel" placeholder="Enter contact email" required email>
+                        </div>
+                        <div *ngIf="contactEmail.invalid && (contactEmail.dirty || contactEmail.touched)"
+                            class="validation-error">
+                            <span *ngIf="contactEmail.errors?.['required']">Contact email is required.</span>
+                            <span *ngIf="contactEmail.errors?.['email']">Please enter a valid email address.</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Campus Address</label>
+                        <div class="input-wrapper">
+                            <i data-lucide="map-pin" class="input-icon"></i>
+                            <input type="text" name="address" [(ngModel)]="currentCollege.address" #address="ngModel"
+                                placeholder="Enter campus address">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="cancel-btn" (click)="closeModal()"
+                        [disabled]="isSaving">Cancel</button>
+                    <button type="submit" class="save-btn" [disabled]="!collegeForm.valid || isSaving">
+                        <i *ngIf="isSaving" data-lucide="loader-2" class="spin"></i>
+                        <span *ngIf="!isSaving">{{ isEditing ? 'Update Details' : 'Register' }}</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bulk Upload Modal -->
+    <div class="modal-overlay" *ngIf="isBulkUploadModalOpen" (click)="closeBulkUploadModal()">
+        <div class="modal-content glass-morphism bulk-upload-modal" (click)="$event.stopPropagation()">
+            <div class="modal-header" style="margin-bottom: 1.5rem;">
+                <h2 class="gradient-text" style="font-size: 1.25rem;">Bulk Import Colleges</h2>
+                <button class="close-btn" (click)="closeBulkUploadModal()">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+
+            <div class="bulk-upload-content management-form" style="display: flex; gap: 1rem; flex-direction: column;">
+                <div class="step-card nested-glass form-grid" style="padding: 1rem; margin-bottom: 0;">
+                    <div class="step-header full-width"
+                        style="margin-bottom: 0.5rem; display: flex; align-items: center;">
+                        <div class="step-number" style="width: 24px; height: 24px; font-size: 0.8rem;">1</div>
+                        <h3 style="font-size: 1rem; margin-left: 0.5rem; flex: 1;">Download Template</h3>
+                        <button type="button" class="btn-secondary" (click)="downloadTemplate()"
+                            style="padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.85rem;">
+                            <i data-lucide="download" style="width: 14px; height: 14px;"></i>
+                            <span>Download</span>
+                        </button>
+                    </div>
+                    <p class="step-desc full-width" style="margin-bottom: 0; font-size: 0.85rem;">Get the Excel template
+                        with the required format.</p>
+                </div>
+
+                <div class="step-card nested-glass form-grid" style="padding: 1rem;">
+                    <div class="step-header full-width" style="margin-bottom: 0.5rem;">
+                        <div class="step-number" style="width: 24px; height: 24px; font-size: 0.8rem;">2</div>
+                        <h3 style="font-size: 1rem; margin-left: 0.5rem;">Upload File</h3>
+                    </div>
+
+                    <div class="upload-zone full-width" (click)="triggerFileInput()"
+                        style="border: 2px dashed rgba(255, 255, 255, 0.2); border-radius: 8px; padding: 1.5rem; text-align: center; cursor: pointer; transition: all 0.3s ease; background: rgba(255, 255, 255, 0.02);">
+                        <div *ngIf="!isUploading" class="upload-idle">
+                            <i data-lucide="upload-cloud" class="upload-icon"
+                                style="font-size: 2rem; color: var(--primary-color); margin-bottom: 0.5rem; opacity: 0.8;"></i>
+                            <p style="margin-bottom: 0.25rem; font-weight: 500; font-size: 0.9rem;">Click to browse file
+                            </p>
+                            <span class="file-hint" style="font-size: 0.75rem; color: var(--text-muted);">Formats:
+                                .xlsx, .xls, .csv</span>
+                        </div>
+                        <div *ngIf="isUploading" class="upload-loading"
+                            style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
+                            <i data-lucide="loader-2" class="spin"
+                                style="font-size: 1.5rem; color: var(--primary-color);"></i>
+                            <p style="font-size: 0.9rem;">Uploading colleges...</p>
+                        </div>
+                    </div>
+                    <input type="file" #fileInput hidden accept=".xlsx, .xls, .csv" (change)="onFileSelected($event)">
+                </div>
+            </div>
+
+            <div class="modal-footer" style="justify-content: flex-end; margin-top: 1.5rem;">
+                <button type="button" class="cancel-btn" (click)="closeBulkUploadModal()" [disabled]="isUploading"
+                    style="padding: 0.5rem 1rem; font-size: 0.9rem;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Dialog -->
+    <app-confirm-modal [isOpen]="isConfirmModalOpen" [title]="confirmModalTitle" [message]="confirmModalMessage"
+        [confirmText]="confirmModalBtnText" [isLoading]="isSaving" (confirm)="executeConfirmAction()"
+        (cancel)="cancelConfirmAction()">
+    </app-confirm-modal>
+</div>

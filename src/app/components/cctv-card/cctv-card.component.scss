@@ -1,0 +1,190 @@
+:host {
+    display: block;
+}
+
+.card {
+    cursor: pointer;
+    overflow: hidden;
+    transition: var(--transition);
+    height: 100%;
+
+    &:hover {
+        transform: translateY(-8px) scale(1.02);
+        border-color: var(--primary);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+
+        .overlay {
+            opacity: 1;
+        }
+
+        .thumbnail {
+            transform: scale(1.1);
+        }
+    }
+
+    &.offline {
+        opacity: 0.7;
+        filter: grayscale(0.5);
+
+        .status-badge {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+
+            .dot {
+                background: #ef4444;
+            }
+        }
+    }
+}
+
+.thumbnail-wrapper {
+    position: relative;
+    height: 180px;
+    overflow: hidden;
+    background: var(--bg-darker);
+
+    .thumbnail {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: var(--transition);
+    }
+
+    .status-badge {
+        position: absolute;
+        top: 0.75rem;
+        left: 0.75rem;
+        padding: 0.25rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: rgba(16, 185, 129, 0.2);
+        color: var(--accent);
+        backdrop-filter: blur(4px);
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 8px var(--accent);
+        }
+
+        &.online .dot {
+            animation: pulse 1.5s infinite;
+        }
+    }
+
+    .play-btn {
+        width: 48px;
+        height: 48px;
+        background: var(--primary);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+
+        i {
+            width: 24px;
+            height: 24px;
+        }
+    }
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.2);
+        opacity: 0.5;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.info {
+    padding: 1.25rem;
+
+    .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.6rem;
+
+        .name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .icon {
+            width: 18px;
+            height: 18px;
+            color: var(--text-muted);
+
+            &.online {
+                color: var(--accent);
+            }
+        }
+    }
+
+    .location {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-muted);
+        font-size: 0.875rem;
+
+        i {
+            width: 14px;
+            height: 14px;
+        }
+    }
+}
+
+/* CCTV Card Responsive */
+@media (max-width: 768px) {
+    .card {
+        &:hover {
+            transform: none;
+        }
+    }
+
+    .thumbnail-wrapper {
+        height: 160px;
+    }
+
+    .info {
+        padding: 1rem;
+
+        .header .name {
+            font-size: 1rem;
+        }
+
+        .location {
+            font-size: 0.8rem;
+        }
+    }
+}
