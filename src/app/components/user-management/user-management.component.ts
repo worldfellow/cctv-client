@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { CctvService, User } from '../../services/cctv.service';
 import { ToastService } from '../../services/toast.service';
 import { ConfirmModalComponent } from '../shared/confirm-modal/confirm-modal.component';
+import { IconService } from '../../services/icon.service';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import {
@@ -12,8 +13,6 @@ import {
   UploadCloud, Play, CheckCircle, AlertTriangle, AlertCircle,
   ChevronDown, ChevronUp, ChevronLeft, ChevronRight, User as UserIcon, Mail, Lock, Shield, Building2, Key, Edit3
 } from 'lucide-angular';
-
-declare var lucide: any;
 
 @Component({
   selector: 'app-user-management',
@@ -25,7 +24,10 @@ declare var lucide: any;
 export class UserManagementComponent implements OnInit, AfterViewInit, OnDestroy {
   users: User[] = [];
   colleges: any[] = [];
+  roles: any[] = [];
   isLoading: boolean = false;
+  isAddingNewRole: boolean = false;
+  newRoleName: string = '';
   showModal: boolean = false;
   isEditing: boolean = false;
   isSaving: boolean = false;
@@ -76,12 +78,14 @@ export class UserManagementComponent implements OnInit, AfterViewInit, OnDestroy
 
   constructor(
     private cctvService: CctvService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private iconService: IconService
   ) { }
 
   ngOnInit(): void {
     this.loadUsers();
     this.loadColleges();
+    this.loadRoles();
 
     this.searchSubscription = this.searchSubject.pipe(
       debounceTime(400),
@@ -103,11 +107,7 @@ export class UserManagementComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   refreshIcons(): void {
-    setTimeout(() => {
-      if (typeof lucide !== 'undefined') {
-        lucide.createIcons();
-      }
-    }, 50);
+    this.iconService.refreshIcons();
   }
 
 
@@ -121,6 +121,36 @@ export class UserManagementComponent implements OnInit, AfterViewInit, OnDestroy
         console.error('Error loading colleges:', err);
       }
     });
+  }
+
+  loadRoles(): void {
+    this.cctvService.getRoles().subscribe({
+      next: (roles) => {
+        this.roles = roles;
+      },
+      error: (err) => {
+        console.error('Error loading roles:', err);
+        this.roles = [
+          { roleId: 'STAFF', roleName: 'STAFF' },
+          { roleId: 'SUPER_ADMIN', roleName: 'SUPER_ADMIN' }
+        ];
+      }
+    });
+  }
+
+  onRoleChange(): void {
+    if (this.currentUser.role === 'ADD_NEW') {
+      this.isAddingNewRole = true;
+      this.currentUser.role = '';
+    } else {
+      this.isAddingNewRole = false;
+    }
+  }
+
+  cancelNewRole(): void {
+    this.isAddingNewRole = false;
+    this.newRoleName = '';
+    this.currentUser.role = this.roles.length > 0 ? this.roles[0].roleName : '';
   }
 
   get filteredColleges(): any[] {
@@ -371,12 +401,16 @@ export class UserManagementComponent implements OnInit, AfterViewInit, OnDestroy
   // --- CRUD ---
   openCreateModal(): void {
     this.isEditing = false;
-    this.currentUser = { firstName: '', lastName: '', email: '', mobileNo: '', role: 'VIEWER', collegeId: '' };
+    this.isAddingNewRole = false;
+    this.newRoleName = '';
+    this.currentUser = { firstName: '', lastName: '', email: '', mobileNo: '', role: 'STAFF', collegeId: '' };
     this.showModal = true;
   }
 
   openEditModal(user: User): void {
     this.isEditing = true;
+    this.isAddingNewRole = false;
+    this.newRoleName = '';
     this.currentUser = { ...user };
     this.showModal = true;
   }
@@ -388,7 +422,9 @@ export class UserManagementComponent implements OnInit, AfterViewInit, OnDestroy
   saveUser(): void {
     this.isSaving = true;
 
-    this.currentUser.firstName = this.currentUser.firstName?.trim();
+    if (this.isAddingNewRole && this.newRoleName.trim()) {
+      this.currentUser.role = this.newRoleName.trim();
+    }
     this.currentUser.lastName = this.currentUser.lastName?.trim();
     this.currentUser.email = this.currentUser.email?.trim();
     this.currentUser.mobileNo = this.currentUser.mobileNo?.trim();
@@ -399,6 +435,7 @@ export class UserManagementComponent implements OnInit, AfterViewInit, OnDestroy
           this.isSaving = false;
           this.toastService.show('User updated successfully', 'success');
           this.loadUsers();
+          this.loadRoles(); // Refresh roles list
           this.closeModal();
           this.refreshIcons();
         },
@@ -415,6 +452,7 @@ export class UserManagementComponent implements OnInit, AfterViewInit, OnDestroy
           this.isSaving = false;
           this.toastService.show('User created successfully', 'success');
           this.loadUsers();
+          this.loadRoles(); // Refresh roles list
           this.closeModal();
           this.refreshIcons();
         },
@@ -568,4 +606,16 @@ export class UserManagementComponent implements OnInit, AfterViewInit, OnDestroy
       }
     });
   }
+
+  hasActionAccess(actionId: string): boolean {
+    const user = this.cctvService.userDetails;
+    if (!user) return false;
+    if (user.role === 'SUPER_ADMIN') return true;
+    return user.permissions?.actions?.includes(actionId) || false;
+  }
+
+  trackByUserId(index: number, user: any): string { return user.id || user.keycloakId; }
+  trackByRoleId(index: number, role: any): string { return role.roleId || role.roleName; }
+  trackByCollegeId(index: number, college: any): string { return college.id; }
+  trackByIndex(index: number): number { return index; }
 }

@@ -1,7 +1,8 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-declare var lucide: any;
+import { IconService } from '../../services/icon.service';
+
 declare var JSMpeg: any;
 
 export interface CctvFeed {
@@ -28,12 +29,12 @@ export class CctvCardComponent implements OnInit, AfterViewInit, OnDestroy {
 
   player: any;
 
+  constructor(private iconService: IconService) { }
+
   ngOnInit(): void { }
 
   ngAfterViewInit(): void {
-    if (typeof lucide !== 'undefined') {
-      lucide.createIcons();
-    }
+    this.iconService.refreshIcons();
     if (this.feed.wsUrl && this.feed.status === 'online') {
       this.initPlayer();
     }

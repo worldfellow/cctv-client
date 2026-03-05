@@ -5,11 +5,14 @@
     </div>
 
     <div class="login-card glass-morphism" *ngIf="!showChangePassword">
-        <div class="login-header">
-            <div class="logo">
-                <i data-lucide="shield" class="logo-icon"></i>
+        <div class="login-header" *ngIf="config$ | async as config">
+            <div class="logo-wrapper">
+                <img *ngIf="config.logoUrl" [src]="config.logoUrl" alt="Logo" class="logo-img-large">
+                <div class="logo-placeholder" *ngIf="!config.logoUrl">
+                    <i data-lucide="shield" class="logo-icon-large"></i>
+                </div>
             </div>
-            <h1 class="gradient-text">Vision Express</h1>
+            <h1 class="gradient-text">{{ config.appName || 'Vision Express' }}</h1>
             <p class="subtitle">Secure Surveillance Access</p>
         </div>
 

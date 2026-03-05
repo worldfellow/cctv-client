@@ -1,0 +1,56 @@
+<div class="settings-container glass-morphism">
+    <div class="settings-header">
+        <div class="header-info">
+            <h1>Dynamic Branding</h1>
+            <p>Customize the application name and logo displayed globally.</p>
+        </div>
+        <div class="header-actions">
+            <button class="save-btn" (click)="saveSettings()" [disabled]="isLoading">
+                <i data-lucide="save" *ngIf="!isLoading"></i>
+                <span class="spinner" *ngIf="isLoading"></span>
+                <span>{{ isLoading ? 'Saving...' : 'Save Changes' }}</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="settings-grid">
+        <!-- Logo Upload Section -->
+        <div class="settings-card logo-card">
+            <div class="card-header">
+                <h3>Application Logo</h3>
+            </div>
+            <div class="logo-upload-area">
+                <div class="logo-preview-box">
+                    <img *ngIf="previewUrl" [src]="previewUrl" alt="Logo Preview" class="logo-preview">
+                    <div *ngIf="!previewUrl" class="no-logo">
+                        <i data-lucide="image"></i>
+                        <span>No logo uploaded</span>
+                    </div>
+                </div>
+                <div class="upload-controls">
+                    <label class="upload-btn">
+                        <i data-lucide="upload"></i>
+                        <span>Upload New Logo</span>
+                        <input type="file" (change)="onFileSelected($event)" accept="image/*" hidden>
+                    </label>
+                    <p class="hint">Recommended size: 512x512px. Formats: PNG, JPG, SVG.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- App Name Section -->
+        <div class="settings-card name-card">
+            <div class="card-header">
+                <h3>General Settings</h3>
+            </div>
+            <div class="input-group">
+                <label for="appName">Application Name</label>
+                <div class="input-wrapper">
+                    <i data-lucide="type"></i>
+                    <input type="text" id="appName" [(ngModel)]="config.appName" placeholder="e.g. Vision Express"
+                        class="form-control">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

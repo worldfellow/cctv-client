@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, Output, OnChanges, SimpleChanges, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-declare var lucide: any;
+import { IconService } from '../../../services/icon.service';
 
 @Component({
   selector: 'app-confirm-modal',
@@ -181,6 +181,8 @@ export class ConfirmModalComponent implements OnChanges, AfterViewInit {
   @Output() confirm = new EventEmitter<void>();
   @Output() cancel = new EventEmitter<void>();
 
+  constructor(private iconService: IconService) { }
+
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['isOpen'] && changes['isOpen'].currentValue) {
       this.refreshIcons();
@@ -192,11 +194,7 @@ export class ConfirmModalComponent implements OnChanges, AfterViewInit {
   }
 
   refreshIcons(): void {
-    setTimeout(() => {
-      if (typeof lucide !== 'undefined') {
-        lucide.createIcons();
-      }
-    }, 50);
+    this.iconService.refreshIcons();
   }
 
   onConfirm(): void {

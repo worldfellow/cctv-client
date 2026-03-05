@@ -17,6 +17,9 @@
   --grad-start: #818cf8;
   --grad-end: #c084fc;
   --modal-overlay-bg: rgba(2, 6, 23, 0.85);
+  --dropdown-bg: rgba(2, 6, 23, 0.95);
+  --dropdown-input-bg: rgba(0, 0, 0, 0.3);
+  --dropdown-input-focus-bg: rgba(0, 0, 0, 0.5);
 }
 
 body.theme-white {
@@ -34,6 +37,9 @@ body.theme-white {
   --grad-end: #3b82f6;
   --glass-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
   --modal-overlay-bg: rgba(15, 23, 42, 0.5);
+  --dropdown-bg: rgba(255, 255, 255, 0.95);
+  --dropdown-input-bg: #ffffff;
+  --dropdown-input-focus-bg: #ffffff;
 
   .glass-morphism {
     background: rgba(255, 255, 255, 0.6);
@@ -133,6 +139,37 @@ body.theme-white {
       background: #f1f5f9 !important;
       border-color: rgba(0, 0, 0, 0.08) !important;
     }
+
+    /* Additional fixes for white theme visibility */
+    .modal-header {
+      h3 {
+        color: #1e293b !important;
+      }
+
+      .subtitle {
+        color: #64748b !important;
+      }
+    }
+
+    .title-icon {
+      color: var(--primary) !important;
+    }
+
+    .info-card p {
+      color: #1e293b !important;
+    }
+
+    .btn-outline {
+      background: #ffffff !important;
+      border: 1px solid rgba(0, 0, 0, 0.1) !important;
+      color: #1e293b !important;
+
+      &:hover {
+        background: #f1f5f9 !important;
+        border-color: var(--primary) !important;
+        color: var(--primary) !important;
+      }
+    }
   }
 
   /* Modal footer border */
@@ -226,6 +263,11 @@ body.theme-white {
   .submit-btn:disabled,
   .save-btn:disabled {
     background: rgba(59, 130, 246, 0.3) !important;
+  }
+
+  .custom-dropdown .dropdown-menu .search-container input {
+    border-color: rgba(0, 0, 0, 0.1) !important;
+    color: #1e293b !important;
   }
 }
 
@@ -735,7 +777,7 @@ button {
     right: 0;
     z-index: 2000;
     padding: 0.85rem;
-    background: var(--modal-overlay-bg);
+    background: var(--dropdown-bg);
     backdrop-filter: blur(25px);
     -webkit-backdrop-filter: blur(25px);
     border: 1px solid var(--card-border);
@@ -762,7 +804,7 @@ button {
       input {
         width: 100% !important;
         padding: 0.65rem 0.85rem 0.65rem 2.5rem !important;
-        background: rgba(0, 0, 0, 0.3) !important;
+        background: var(--dropdown-input-bg) !important;
         border: 1px solid var(--card-border) !important;
         border-radius: 10px !important;
         color: var(--text-main) !important;
@@ -773,7 +815,7 @@ button {
         &:focus {
           outline: none !important;
           border-color: var(--primary) !important;
-          background: rgba(0, 0, 0, 0.5) !important;
+          background: var(--dropdown-input-focus-bg) !important;
         }
       }
     }
@@ -895,6 +937,25 @@ button {
 .bulk-modal {
   max-width: 600px !important;
 
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+
+    .title-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .title-icon {
+        width: 24px;
+        height: 24px;
+        color: var(--primary);
+      }
+    }
+  }
+
   .subtitle {
     font-size: 0.9rem;
     color: var(--text-muted);
@@ -924,6 +985,33 @@ button {
         flex: 1;
         font-size: 0.9rem;
         color: var(--text-main);
+        margin: 0;
+      }
+
+      .btn-outline {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border-radius: 8px;
+        background: var(--input-bg);
+        border: 1px solid var(--card-border);
+        color: var(--text-main);
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: var(--transition);
+
+        &:hover {
+          background: rgba(var(--primary-rgb), 0.1);
+          border-color: var(--primary);
+          color: var(--primary);
+        }
+
+        lucide-icon,
+        i {
+          width: 16px;
+          height: 16px;
+        }
       }
     }
   }

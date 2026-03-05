@@ -4,7 +4,7 @@
             <canvas #canvas class="thumbnail"></canvas>
         </ng-container>
         <ng-template #useThumbnail>
-            <img [src]="feed.thumbnail" [alt]="feed.name" class="thumbnail">
+            <img [src]="feed.thumbnail" [alt]="feed.name" class="thumbnail" loading="lazy">
         </ng-template>
         <div class="overlay">
             <div class="status-badge" [class.online]="feed.status === 'online'">

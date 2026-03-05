@@ -4,8 +4,9 @@ import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, For
 import { CctvService, College } from '../../services/cctv.service';
 import { ToastService } from '../../services/toast.service';
 import { ConfirmModalComponent } from '../shared/confirm-modal/confirm-modal.component';
+import { IconService } from '../../services/icon.service';
 import { forkJoin, Subject } from 'rxjs';
-import { LucideAngularModule, Filter, FolderUp, Plus, Video, Radio, Edit3, Trash2, CameraOff, X, Building2, Network, Plug, User, Lock, PlusCircle, Save, Download, UploadCloud, CheckSquare, CheckCircle, XCircle } from 'lucide-angular';
+import { LucideAngularModule, Filter, FolderUp, Plus, Video, Radio, Edit3, Trash2, CameraOff, X, Building2, Network, Plug, User, Lock, PlusCircle, Save, Download, UploadCloud, CheckSquare, CheckCircle, XCircle, FileText, Loader2, ChevronDown, Search, ChevronLeft, ChevronRight } from 'lucide-angular';
 
 // Flat record from server
 export interface CameraRecord {
@@ -36,7 +37,13 @@ export interface CameraDevice {
 @Component({
     selector: 'app-camera-registration',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, FormsModule, LucideAngularModule, ConfirmModalComponent],
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        FormsModule,
+        LucideAngularModule,
+        ConfirmModalComponent
+    ],
     templateUrl: './camera-registration.component.html',
     styleUrl: './camera-registration.component.scss'
 })
@@ -67,6 +74,7 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy {
     isEditing = false;
     editingRecord: CameraRecord | null = null;
     isBulkUploadModalOpen = false;
+    isBulkEditing = false; // New state for bulk edit mode
 
     // College Dropdown States
     showFilterDropdown: boolean = false;
@@ -92,7 +100,8 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy {
     constructor(
         private fb: FormBuilder,
         private cctvService: CctvService,
-        private toastService: ToastService
+        private toastService: ToastService,
+        private iconService: IconService
     ) {
         this.createForm();
     }
@@ -100,6 +109,7 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy {
     ngOnInit(): void {
         this.loadColleges();
         this.loadCameras();
+        this.refreshIcons();
     }
 
     ngOnDestroy(): void {
@@ -743,6 +753,26 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy {
         });
     }
 
+    downloadExistingData() {
+        const collegeId = this.selectedFilterCollege;
+        this.cctvService.downloadCameraData(collegeId).subscribe({
+            next: (blob) => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                const fileName = collegeId ? `Camera_Bulk_Edit_${this.selectedFilterCollegeName}.xlsx` : 'Camera_Bulk_Edit_All_Colleges.xlsx';
+                a.download = fileName;
+                a.click();
+                window.URL.revokeObjectURL(url);
+                this.toastService.show('Camera data exported successfully', 'success');
+            },
+            error: (err) => {
+                console.error('Error exporting camera data:', err);
+                this.toastService.show('Failed to export camera data', 'error');
+            }
+        });
+    }
+
     triggerFileInput() {
         if (this.fileInput) {
             this.fileInput.nativeElement.click();
@@ -756,16 +786,23 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy {
             formData.append('file', file);
 
             this.isLoading = true;
-            this.cctvService.bulkUploadCameras(formData).subscribe({
+            const uploadObservable = this.isBulkEditing
+                ? this.cctvService.bulkUpdateCameras(formData)
+                : this.cctvService.bulkUploadCameras(formData);
+
+            uploadObservable.subscribe({
                 next: (res) => {
                     this.isLoading = false;
-                    this.toastService.show(res.message || 'Cameras uploaded successfully!', 'success');
+                    const msg = this.isBulkEditing
+                        ? `Bulk Update Complete: ${res.details.updated} updated, ${res.details.created} created.`
+                        : res.message || 'Cameras uploaded successfully!';
+                    this.toastService.show(msg, 'success');
                     this.loadCameras();
                     this.closeBulkUploadModal();
                 },
                 error: (err) => {
                     this.isLoading = false;
-                    const errMsg = err.error?.message || 'Failed to upload cameras';
+                    const errMsg = err.error?.message || 'Failed to process file';
                     const errDetails = err.error?.errors?.join('\n') || '';
                     console.error(errMsg, errDetails);
                     this.toastService.show(errMsg, 'error');
@@ -776,8 +813,14 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy {
         }
     }
 
-    openBulkUploadModal() {
+    openBulkUploadModal(isEdit: boolean = false) {
+        this.isBulkEditing = isEdit;
         this.isBulkUploadModalOpen = true;
+        this.refreshIcons();
+    }
+
+    private refreshIcons() {
+        this.iconService.refreshIcons();
     }
 
     closeBulkUploadModal() {
@@ -786,4 +829,16 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy {
             this.fileInput.nativeElement.value = null;
         }
     }
+
+    hasActionAccess(actionId: string): boolean {
+        const user = this.cctvService.userDetails;
+        if (!user) return false;
+        if (user.role === 'SUPER_ADMIN') return true;
+        return user.permissions?.actions?.includes(actionId) || false;
+    }
+
+    trackByCollegeId(index: number, college: any): string { return college.id; }
+    trackByRecordId(index: number, record: any): string { return record.id; }
+
+    trackByIndex(index: number): number { return index; }
 }

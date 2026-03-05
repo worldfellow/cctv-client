@@ -1,0 +1,249 @@
+<div class="access-control-container">
+    <div class="page-header">
+        <div class="header-content">
+            <h1 class="page-title">Access Control</h1>
+            <p class="page-subtitle">Manage granular permissions and college access for users</p>
+        </div>
+        <div class="header-actions">
+            <button class="reset-btn glass-morphism" (click)="resetPage()" [disabled]="isSaving">
+                <lucide-icon name="rotate-ccw"></lucide-icon>
+                <span>Reset</span>
+            </button>
+            <button class="apply-btn glass-morphism" (click)="applyAccess()"
+                [disabled]="isSaving || selectedUserIds.size === 0">
+                <lucide-icon [name]="isSaving ? 'loader' : 'check-circle'" [class.spin]="isSaving"></lucide-icon>
+                <span>{{ isSaving ? 'Applying...' : 'Apply Access' }}</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="content-grid">
+        <!-- User Selection Section -->
+        <div class="section users-section glass-morphism">
+            <div class="section-header">
+                <div class="header-info clickable" (click)="toggleSelectedUsersView()"
+                    [title]="selectedUserIds.size > 0 ? 'View selected users' : ''">
+                    <lucide-icon name="users"></lucide-icon>
+                    <h3>Select Users ({{ selectedUserIds.size }})</h3>
+                    <lucide-icon *ngIf="selectedUserIds.size > 0" name="chevron-right"
+                        class="view-selected-icon"></lucide-icon>
+                </div>
+                <div class="search-bar">
+                    <lucide-icon name="search"></lucide-icon>
+                    <input type="text" placeholder="Search users..." [(ngModel)]="searchQuery" (input)="onSearch()">
+                </div>
+            </div>
+
+            <div class="user-list custom-scrollbar">
+                <div *ngIf="isLoadingUsers" class="loading-state">
+                    <div class="spinner"></div>
+                    <span>Loading users...</span>
+                </div>
+
+                <div *ngFor="let user of users; trackBy: trackByUserId" class="user-item"
+                    [class.selected]="selectedUserIds.has(user.id!)" (click)="toggleUserSelection(user)">
+                    <div class="user-avatar">
+                        <img [src]="'https://ui-avatars.com/api/?name=' + user.firstName + '+' + user.lastName + '&background=6366f1&color=fff'"
+                            alt="" loading="lazy">
+                    </div>
+                    <div class="user-details">
+                        <span class="user-name">{{ user.firstName }} {{ user.lastName }}</span>
+                        <span class="user-email">{{ user.email }}</span>
+                    </div>
+                    <div class="selection-indicator">
+                        <lucide-icon [name]="selectedUserIds.has(user.id!) ? 'check-circle' : 'circle'"></lucide-icon>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pagination Controls - Sticky at bottom -->
+            <div class="pagination-controls">
+                <button class="page-btn" (click)="changePage(currentPage - 1)" [disabled]="currentPage === 1">
+                    <lucide-icon name="chevron-left"></lucide-icon>
+                </button>
+                <div class="page-info">
+                    <span class="current">{{ currentPage }}</span>
+                    <span class="divider">/</span>
+                    <span class="total">{{ totalPages }}</span>
+                </div>
+                <button class="page-btn" (click)="changePage(currentPage + 1)" [disabled]="currentPage === totalPages">
+                    <lucide-icon name="chevron-right"></lucide-icon>
+                </button>
+            </div>
+        </div>
+
+        <!-- Permissions Section -->
+        <div class="section permissions-section glass-morphism" [class.disabled]="selectedUserIds.size === 0">
+            <div class="section-content custom-scrollbar">
+                <!-- Menu Access -->
+                <div class="permission-group">
+                    <div class="group-header">
+                        <lucide-icon name="layout-grid"></lucide-icon>
+                        <h4>Menu Access</h4>
+                        <div class="group-actions">
+                            <button class="select-all-btn" [class.active]="allMenusSelected" (click)="toggleAllMenus()">
+                                <lucide-icon [name]="allMenusSelected ? 'check-square' : 'square'"></lucide-icon>
+                                Select All
+                            </button>
+                        </div>
+                    </div>
+                    <div class="options-grid">
+                        <div *ngFor="let menu of availableMenus; trackBy: trackByMenuId" class="option-item"
+                            [class.active]="isMenuSelected(menu.id)" (click)="toggleMenu(menu.id)">
+                            <div class="option-checkbox">
+                                <lucide-icon [name]="isMenuSelected(menu.id) ? 'check-circle' : 'circle'"></lucide-icon>
+                            </div>
+                            <lucide-icon [name]="menu.icon" class="menu-icon"></lucide-icon>
+                            <span>{{ menu.label }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Access -->
+                <div class="permission-group">
+                    <div class="group-header">
+                        <lucide-icon name="lock"></lucide-icon>
+                        <h4>Action Access</h4>
+                        <div class="group-actions">
+                            <button class="select-all-btn" [class.active]="allActionsSelected"
+                                (click)="toggleAllActions()">
+                                <lucide-icon [name]="allActionsSelected ? 'check-square' : 'square'"></lucide-icon>
+                                Select All
+                            </button>
+                        </div>
+                    </div>
+                    <div class="group-subsections">
+                        <div *ngFor="let group of groupedAvailableActions" class="menu-action-group"
+                            [class.collapsed]="!isGroupExpanded(group.menuId)">
+                            <h5 class="menu-group-title" (click)="toggleMenuGroup(group.menuId)">
+                                <span class="title-content">
+                                    <lucide-icon
+                                        [name]="isGroupExpanded(group.menuId) ? 'chevron-down' : 'chevron-right'"
+                                        class="expand-icon"></lucide-icon>
+                                    {{ group.menuLabel }} Permissions
+                                </span>
+                                <button class="group-select-all" [class.active]="allActionsInGroupSelected(group)"
+                                    (click)="toggleGroupActions(group, $event)"
+                                    [title]="allActionsInGroupSelected(group) ? 'Deselect all in group' : 'Select all in group'">
+                                    <lucide-icon
+                                        [name]="allActionsInGroupSelected(group) ? 'check-square' : 'square'"></lucide-icon>
+                                    <span>Select All</span>
+                                </button>
+                            </h5>
+                            <div class="action-grid" *ngIf="isGroupExpanded(group.menuId)">
+                                <div *ngFor="let action of group.actions; trackBy: trackByActionId" class="option-item"
+                                    [class.active]="isActionSelected(action.id)" (click)="toggleAction(action.id)">
+                                    <div class="option-checkbox">
+                                        <lucide-icon
+                                            [name]="isActionSelected(action.id) ? 'check-circle' : 'circle'"></lucide-icon>
+                                    </div>
+                                    <div class="action-info">
+                                        <span class="action-label">{{ action.label }}</span>
+                                        <span class="action-group">{{ action.group }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- College Access -->
+                <div class="permission-group">
+                    <div class="group-header">
+                        <lucide-icon name="building-2"></lucide-icon>
+                        <h4>College Access</h4>
+                    </div>
+                    <div class="college-options">
+                        <div class="option-item all-colleges" [class.active]="isAllCollegesSelected"
+                            (click)="toggleAllColleges()">
+                            <div class="option-checkbox">
+                                <lucide-icon [name]="isAllCollegesSelected ? 'check-circle' : 'circle'"></lucide-icon>
+                            </div>
+                            <span>Allow All Colleges</span>
+                        </div>
+
+                        <div class="colleges-management" [class.dimmed]="isAllCollegesSelected">
+                            <div class="colleges-header">
+                                <div class="college-search">
+                                    <lucide-icon name="search"></lucide-icon>
+                                    <input type="text" placeholder="Search colleges..."
+                                        [(ngModel)]="collegeSearchQuery">
+                                </div>
+                                <div class="college-actions">
+                                    <button class="text-btn" (click)="selectAllFilteredColleges()"
+                                        [disabled]="isAllCollegesSelected">Select All</button>
+                                    <button class="text-btn" (click)="deselectAllFilteredColleges()"
+                                        [disabled]="isAllCollegesSelected">Deselect All</button>
+                                </div>
+                            </div>
+                            <div class="colleges-scrollable custom-scrollbar">
+                                <div class="colleges-grid">
+                                    <div *ngFor="let college of filteredColleges; trackBy: trackByCollegeId"
+                                        class="option-item college-item" [class.active]="isCollegeSelected(college.id)"
+                                        (click)="toggleCollege(college.id)">
+                                        <div class="option-checkbox">
+                                            <lucide-icon
+                                                [name]="isCollegeSelected(college.id) ? 'check-circle' : 'circle'"></lucide-icon>
+                                        </div>
+                                        <span>{{ college.name }}</span>
+                                    </div>
+                                    <div *ngIf="filteredColleges.length === 0" class="no-colleges">
+                                        No colleges found matching "{{ collegeSearchQuery }}"
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Selected Users Modal - Full Screen Overlay -->
+    <div class="selected-users-backdrop" *ngIf="showSelectedUsers" (click)="toggleSelectedUsersView()">
+        <div class="selected-users-modal glass-morphism" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <div class="header-main">
+                    <lucide-icon name="users"></lucide-icon>
+                    <div class="title-group">
+                        <h4>Selected Users</h4>
+                        <span>{{ selectedUserIds.size }} users selected</span>
+                    </div>
+                </div>
+                <button class="close-modal-btn" (click)="toggleSelectedUsersView()">
+                    <lucide-icon name="x"></lucide-icon>
+                </button>
+            </div>
+
+            <div class="modal-content custom-scrollbar">
+                <div *ngIf="selectedUserIds.size === 0" class="empty-selection">
+                    <lucide-icon name="shield-check"></lucide-icon>
+                    <p>No users selected</p>
+                </div>
+
+                <div *ngFor="let user of selectedUsersMap | keyvalue; trackBy: trackByKeyValue" class="selection-card">
+                    <div class="user-brief">
+                        <div class="mini-avatar">
+                            {{ user.value.firstName[0] }}{{ user.value.lastName[0] }}
+                        </div>
+                        <div class="brief-info">
+                            <span class="brief-name">{{ user.value.firstName }} {{ user.value.lastName }}</span>
+                            <span class="brief-email">{{ user.value.email }}</span>
+                        </div>
+                    </div>
+                    <button class="remove-selection-btn" (click)="removeUserFromSelection(user.key)"
+                        title="Remove user">
+                        <lucide-icon name="trash-2"></lucide-icon>
+                    </button>
+                </div>
+            </div>
+
+            <div class="modal-footer" *ngIf="selectedUserIds.size > 0">
+                <button class="clear-all-btn" (click)="resetPage()">
+                    <lucide-icon name="rotate-ccw"></lucide-icon>
+                    <span>Clear Selection</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -3,11 +3,10 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ThemeService, ThemeType } from '../../services/theme.service';
-import { CctvService } from '../../services/cctv.service';
+import { CctvService, User } from '../../services/cctv.service';
+import { IconService } from '../../services/icon.service';
 import { Subscription } from 'rxjs';
 import Keycloak from 'keycloak-js';
-
-declare var lucide: any;
 
 @Component({
   selector: 'app-main-layout',
@@ -21,13 +20,16 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
   isMobile: boolean = false;
   searchQuery: string = '';
   showThemeMenu: boolean = false;
+  isLogoEnlarged: boolean = false;
   private routerSubscription: Subscription;
+  private configSubscription: Subscription;
   private keycloak = inject(Keycloak);
 
   constructor(
     private router: Router,
     public themeService: ThemeService,
-    private cctvService: CctvService
+    private cctvService: CctvService,
+    private iconService: IconService
   ) {
     this.routerSubscription = this.router.events.subscribe(event => {
       if (event instanceof NavigationEnd) {
@@ -36,6 +38,10 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
         }
         this.refreshIcons();
       }
+    });
+
+    this.configSubscription = this.cctvService.systemConfig$.subscribe(() => {
+      this.refreshIcons();
     });
   }
 
@@ -61,6 +67,9 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnDestroy(): void {
     if (this.routerSubscription) {
       this.routerSubscription.unsubscribe();
+    }
+    if (this.configSubscription) {
+      this.configSubscription.unsubscribe();
     }
   }
 
@@ -95,6 +104,20 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.cctvService.userDetails$;
   }
 
+  get config$() {
+    return this.cctvService.systemConfig$;
+  }
+
+  isSuperAdmin(user: User | null): boolean {
+    return user?.role === 'SUPER_ADMIN';
+  }
+
+  hasMenuAccess(user: User | null, menuId: string): boolean {
+    if (!user) return false;
+    if (this.isSuperAdmin(user)) return true;
+    return user.permissions?.menus?.includes(menuId) || false;
+  }
+
   logout(): void {
     this.cctvService.clearAuth();
     localStorage.removeItem('kc_token');
@@ -105,11 +128,11 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  toggleEnlargedLogo(): void {
+    this.isLogoEnlarged = !this.isLogoEnlarged;
+  }
+
   private refreshIcons(): void {
-    setTimeout(() => {
-      if (typeof lucide !== 'undefined') {
-        lucide.createIcons();
-      }
-    }, 0);
+    this.iconService.refreshIcons();
   }
 }

@@ -24,7 +24,7 @@
                             [class.selected]="selectedFilterCollege === ''">
                             All Colleges
                         </div>
-                        <div class="option" *ngFor="let college of filteredCollegesFilter"
+                        <div class="option" *ngFor="let college of filteredCollegesFilter; trackBy: trackByCollegeId"
                             (click)="selectFilterCollege(college.id)"
                             [class.selected]="selectedFilterCollege === college.id">
                             {{ college.name }}
@@ -35,13 +35,21 @@
                     </div>
                 </div>
             </div>
-            <button type="button" class="btn-secondary tooltip" (click)="openBulkUploadModal()">
+            <button *ngIf="hasActionAccess('camera_create')" type="button" class="btn-secondary tooltip"
+                (click)="openBulkUploadModal(false)">
                 <lucide-icon name="folder-up"></lucide-icon>
                 <span>Bulk Import</span>
                 <span class="tooltip-text">Bulk Import Cameras</span>
             </button>
 
-            <button type="button" class="add-btn" (click)="openModal(false)">
+            <button *ngIf="hasActionAccess('camera_edit')" type="button" class="btn-secondary tooltip"
+                (click)="openBulkUploadModal(true)">
+                <lucide-icon name="edit-3"></lucide-icon>
+                <span>Bulk Edit</span>
+                <span class="tooltip-text">Bulk Edit Camera Details</span>
+            </button>
+
+            <button *ngIf="hasActionAccess('camera_create')" type="button" class="add-btn" (click)="openModal(false)">
                 <lucide-icon name="plus"></lucide-icon>
                 <span>Add Camera</span>
             </button>
@@ -49,7 +57,7 @@
     </div>
 
     <!-- Bulk Action Bar -->
-    <div class="bulk-action-bar glass-morphism" *ngIf="selectedCameraIds.size > 0">
+    <div class="bulk-action-bar glass-morphism" *ngIf="selectedCameraIds.size > 0 && hasActionAccess('camera_bulk')">
         <div class="selection-info">
             <lucide-icon name="check-square"></lucide-icon>
             <span>{{ selectedCameraIds.size }} camera(s) selected</span>
@@ -100,7 +108,8 @@
                     </tr>
                 </thead>
                 <tbody [class.loading-fade]="isLoading">
-                    <tr *ngFor="let record of allRecords" [class.selected-row]="selectedCameraIds.has(record.id!)">
+                    <tr *ngFor="let record of allRecords; trackBy: trackByRecordId"
+                        [class.selected-row]="selectedCameraIds.has(record.id!)">
                         <td class="checkbox-col">
                             <label class="custom-checkbox">
                                 <input type="checkbox" [checked]="selectedCameraIds.has(record.id!)"
@@ -136,9 +145,11 @@
                             </div>
                         </td>
                         <td data-label="Status">
-                            <label class="toggle-label table-toggle">
+                            <label class="toggle-label table-toggle"
+                                [style.pointer-events]="hasActionAccess('camera_edit') ? 'auto' : 'none'">
                                 <div class="toggle-switch">
-                                    <input type="checkbox" [checked]="record.isActive" (change)="toggleStatus(record)">
+                                    <input type="checkbox" [checked]="record.isActive" (change)="toggleStatus(record)"
+                                        [disabled]="!hasActionAccess('camera_edit')">
                                     <span class="slider"></span>
                                 </div>
                                 <span class="status-text" [class.active]="record.isActive">
@@ -148,11 +159,13 @@
                         </td>
                         <td>
                             <div class="action-buttons">
-                                <button class="action-btn edit tooltip" (click)="editRecord(record)">
+                                <button *ngIf="hasActionAccess('camera_edit')" class="action-btn edit tooltip"
+                                    (click)="editRecord(record)">
                                     <lucide-icon name="edit-3"></lucide-icon>
                                     <span class="tooltip-text">Edit Camera</span>
                                 </button>
-                                <button class="action-btn delete tooltip" (click)="deleteRecord(record)">
+                                <button *ngIf="hasActionAccess('camera_delete')" class="action-btn delete tooltip"
+                                    (click)="deleteRecord(record)">
                                     <lucide-icon name="trash-2"></lucide-icon>
                                     <span class="tooltip-text">Delete Camera</span>
                                 </button>
@@ -226,8 +239,8 @@
 
             <form [formGroup]="registrationForm" (ngSubmit)="onSubmit()" class="registration-form" autocomplete="off">
                 <div formArrayName="cameras" class="camera-list">
-                    <div *ngFor="let camera of cameras.controls; let camIndex=index" [formGroupName]="camIndex"
-                        class="device-card nested-glass">
+                    <div *ngFor="let camera of cameras.controls; let camIndex=index; trackBy: trackByIndex"
+                        [formGroupName]="camIndex" class="device-card nested-glass">
 
                         <div class="card-header">
                             <h3 class="device-title">{{ isEditing ? 'Edit Camera' : 'Device ' + (camIndex + 1) }}</h3>
@@ -257,7 +270,8 @@
                                                 (click)="$event.stopPropagation()">
                                         </div>
                                         <div class="options-list">
-                                            <div class="option" *ngFor="let college of filteredCollegesModal"
+                                            <div class="option"
+                                                *ngFor="let college of filteredCollegesModal; trackBy: trackByCollegeId"
                                                 (click)="selectModalCollege(camIndex, college)"
                                                 [class.selected]="camera.get('collegeId')?.value === college.id">
                                                 {{ college.name }}
@@ -355,7 +369,7 @@
                                 </button>
                             </div>
                             <div class="channel-list">
-                                <div *ngFor="let ch of getChannels(camIndex).controls; let chIndex=index"
+                                <div *ngFor="let ch of getChannels(camIndex).controls; let chIndex=index; trackBy: trackByIndex"
                                     [formGroupName]="chIndex" class="channel-row">
                                     <div class="channel-inputs">
                                         <div class="form-group">
@@ -420,7 +434,8 @@
     <div class="modal-overlay" *ngIf="isBulkUploadModalOpen" (click)="closeBulkUploadModal()">
         <div class="modal-content glass-morphism bulk-upload-modal" (click)="$event.stopPropagation()">
             <div class="modal-header" style="margin-bottom: 1.5rem;">
-                <h2 class="gradient-text" style="font-size: 1.25rem;">Bulk Import Cameras</h2>
+                <h2 class="gradient-text" style="font-size: 1.25rem;">{{ isBulkEditing ? 'Bulk Edit Cameras' : 'Bulk
+                    Import Cameras' }}</h2>
                 <button class="close-btn" (click)="closeBulkUploadModal()">
                     <lucide-icon name="x"></lucide-icon>
                 </button>
@@ -431,15 +446,20 @@
                     <div class="step-header full-width"
                         style="margin-bottom: 0.5rem; display: flex; align-items: center;">
                         <div class="step-number" style="width: 24px; height: 24px; font-size: 0.8rem;">1</div>
-                        <h3 style="font-size: 1rem; margin-left: 0.5rem; flex: 1;">Download Template</h3>
-                        <button type="button" class="btn-secondary" (click)="downloadTemplate()"
+                        <h3 style="font-size: 1rem; margin-left: 0.5rem; flex: 1;">{{ isBulkEditing ? 'Download Data' :
+                            'Download Template' }}</h3>
+                        <button type="button" class="btn-secondary"
+                            (click)="isBulkEditing ? downloadExistingData() : downloadTemplate()"
                             style="padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.85rem;">
-                            <lucide-icon name="download" style="width: 14px; height: 14px;"></lucide-icon>
-                            <span>Download</span>
+                            <lucide-icon [name]="isBulkEditing ? 'file-text' : 'download'"
+                                style="width: 14px; height: 14px;"></lucide-icon>
+                            <span>{{ isBulkEditing ? 'Export Data' : 'Download' }}</span>
                         </button>
                     </div>
-                    <p class="step-desc full-width" style="margin-bottom: 0; font-size: 0.85rem;">Get the Excel template
-                        with the required format.</p>
+                    <p class="step-desc full-width" style="margin-bottom: 0; font-size: 0.85rem;">
+                        {{ isBulkEditing ? 'Export existing camera details for ' + (selectedFilterCollegeName) + ' to
+                        Excel.' : 'Get the Excel template with the required format.' }}
+                    </p>
                 </div>
 
                 <div class="step-card nested-glass form-grid" style="padding: 1rem;">
@@ -461,7 +481,8 @@
                         <div *ngIf="isLoading" class="upload-loading"
                             style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
                             <div class="spinner" style="width: 1.5rem; height: 1.5rem;"></div>
-                            <p style="font-size: 0.9rem;">Uploading cameras...</p>
+                            <p style="font-size: 0.9rem;">{{ isBulkEditing ? 'Updating cameras...' : 'Uploading
+                                cameras...' }}</p>
                         </div>
                     </div>
                     <input type="file" #fileInput hidden accept=".xlsx, .xls, .csv" (change)="onFileSelected($event)">

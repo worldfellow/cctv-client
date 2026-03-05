@@ -40,20 +40,25 @@ export const authGuard = async (route: ActivatedRouteSnapshot, state: RouterStat
             }, 0);
         }
 
-        // Ensure user details are loaded in CctvService
-        if (!cctvService.userDetails) {
+        // Ensure full user details are loaded from our backend
+        if (!cctvService.userDetails || (!cctvService.userDetails.allowedColleges && cctvService.userDetails.role !== 'SUPER_ADMIN')) {
             try {
-                const profile = await keycloak.loadUserProfile();
-                cctvService.setUserDetails({
-                    keycloakId: profile.id || '',
-                    firstName: profile.firstName || '',
-                    lastName: profile.lastName || '',
-                    email: profile.email || '',
-                    mobileNo: '',
-                    role: getRoleFromKeycloak(keycloak)
-                });
+                await firstValueFrom(cctvService.getProfile());
             } catch (error) {
-                console.error('Failed to load user profile in guard:', error);
+                console.error('Failed to load full user profile in guard:', error);
+
+                // Fallback to Keycloak profile if backend fails
+                if (!cctvService.userDetails) {
+                    const profile = await keycloak.loadUserProfile();
+                    cctvService.setUserDetails({
+                        keycloakId: profile.id || '',
+                        firstName: profile.firstName || '',
+                        lastName: profile.lastName || '',
+                        email: profile.email || '',
+                        mobileNo: '',
+                        role: getRoleFromKeycloak(keycloak)
+                    });
+                }
             }
         }
 

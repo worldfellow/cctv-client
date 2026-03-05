@@ -1,33 +1,50 @@
 <div class="dashboard-layout">
     <!-- Sidebar -->
     <aside class="sidebar glass-morphism" [class.collapsed]="!isSidebarOpen" [class.open]="isSidebarOpen">
-        <div class="sidebar-header">
-            <div class="logo">
-                <i data-lucide="shield" class="logo-icon"></i>
-                <span class="logo-text">Vision Express</span>
+        <div class="sidebar-header" *ngIf="config$ | async as config">
+            <div class="logo" (click)="toggleEnlargedLogo()" title="View full logo">
+                <img *ngIf="config.logoUrl" [src]="config.logoUrl" alt="Logo" class="logo-img">
+                <i *ngIf="!config.logoUrl" data-lucide="shield" class="logo-icon"></i>
+                <span class="logo-text">{{ config.appName }}</span>
             </div>
         </div>
 
-        <nav class="sidebar-nav">
-            <a routerLink="/dashboard" routerLinkActive="active" class="nav-item" (click)="onNavClick()"
-                [attr.data-tooltip]="!isSidebarOpen ? 'Dashboard' : null">
+        <nav class="sidebar-nav" *ngIf="user$ | async as user">
+            <a *ngIf="hasMenuAccess(user, 'dashboard')" routerLink="/dashboard" routerLinkActive="active"
+                class="nav-item" (click)="onNavClick()" [attr.data-tooltip]="!isSidebarOpen ? 'Dashboard' : null">
                 <i data-lucide="layout-grid"></i>
                 <span>Dashboard</span>
             </a>
-            <a routerLink="/users" routerLinkActive="active" class="nav-item" (click)="onNavClick()"
-                [attr.data-tooltip]="!isSidebarOpen ? 'User Management' : null">
+            <a *ngIf="hasMenuAccess(user, 'users')" routerLink="/users" routerLinkActive="active" class="nav-item"
+                (click)="onNavClick()" [attr.data-tooltip]="!isSidebarOpen ? 'User Management' : null">
                 <i data-lucide="users"></i>
                 <span>User Management</span>
             </a>
-            <a routerLink="/colleges" routerLinkActive="active" class="nav-item" (click)="onNavClick()"
-                [attr.data-tooltip]="!isSidebarOpen ? 'Colleges' : null">
+            <a *ngIf="hasMenuAccess(user, 'colleges')" routerLink="/colleges" routerLinkActive="active" class="nav-item"
+                (click)="onNavClick()" [attr.data-tooltip]="!isSidebarOpen ? 'Colleges' : null">
                 <i data-lucide="building-2"></i>
                 <span>Colleges</span>
             </a>
-            <a routerLink="/add-camera" routerLinkActive="active" class="nav-item" (click)="onNavClick()"
-                [attr.data-tooltip]="!isSidebarOpen ? 'Camera Setup' : null">
+            <a *ngIf="hasMenuAccess(user, 'add-camera')" routerLink="/add-camera" routerLinkActive="active"
+                class="nav-item" (click)="onNavClick()" [attr.data-tooltip]="!isSidebarOpen ? 'Camera Setup' : null">
                 <i data-lucide="video"></i>
                 <span>Camera Setup</span>
+            </a>
+            <a *ngIf="isSuperAdmin(user) || hasMenuAccess(user, 'access-control')" routerLink="/access-control"
+                routerLinkActive="active" class="nav-item" (click)="onNavClick()"
+                [attr.data-tooltip]="!isSidebarOpen ? 'Access Control' : null">
+                <i data-lucide="shield"></i>
+                <span>Access Control</span>
+            </a>
+            <a *ngIf="hasMenuAccess(user, 'screenshots')" routerLink="/screenshots" routerLinkActive="active"
+                class="nav-item" (click)="onNavClick()" [attr.data-tooltip]="!isSidebarOpen ? 'Screenshots' : null">
+                <i data-lucide="image"></i>
+                <span>Screenshots</span>
+            </a>
+            <a *ngIf="isSuperAdmin(user)" routerLink="/branding-settings" routerLinkActive="active" class="nav-item"
+                (click)="onNavClick()" [attr.data-tooltip]="!isSidebarOpen ? 'Branding Settings' : null">
+                <i data-lucide="settings"></i>
+                <span>Branding Settings</span>
             </a>
         </nav>
 
@@ -45,11 +62,11 @@
     <!-- Main Content -->
     <main class="main-content">
         <header class="top-nav glass-morphism">
-            <div class="nav-left">
+            <div class="nav-left" *ngIf="config$ | async as config">
                 <button class="menu-toggle" (click)="toggleSidebar()">
                     <i data-lucide="menu"></i>
                 </button>
-                <h2 class="page-title">Vision Express</h2>
+                <h2 class="page-title">{{ config.appName }}</h2>
             </div>
 
             <div class="nav-right">
@@ -104,4 +121,20 @@
             <router-outlet></router-outlet>
         </div>
     </main>
+
+    <!-- Enlarged Logo Modal -->
+    <div class="enlarged-logo-overlay" *ngIf="isLogoEnlarged" (click)="toggleEnlargedLogo()">
+        <ng-container *ngIf="config$ | async as config">
+            <div class="enlarged-logo-container" (click)="$event.stopPropagation()">
+                <button class="close-btn" (click)="toggleEnlargedLogo()">
+                    <i data-lucide="x"></i>
+                </button>
+                <img *ngIf="config.logoUrl" [src]="config.logoUrl" alt="Enlarged Logo">
+                <div *ngIf="!config.logoUrl" class="placeholder-large">
+                    <i data-lucide="shield"></i>
+                    <h2>{{ config.appName }}</h2>
+                </div>
+            </div>
+        </ng-container>
+    </div>
 </div>

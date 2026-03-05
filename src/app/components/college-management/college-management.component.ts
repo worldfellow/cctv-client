@@ -4,10 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { CctvService, College } from '../../services/cctv.service';
 import { ToastService } from '../../services/toast.service';
 import { ConfirmModalComponent } from '../shared/confirm-modal/confirm-modal.component';
+import { IconService } from '../../services/icon.service';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
-
-declare var lucide: any;
 
 @Component({
   selector: 'app-college-management',
@@ -56,7 +55,8 @@ export class CollegeManagementComponent implements OnInit, AfterViewInit, OnDest
 
   constructor(
     private cctvService: CctvService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private iconService: IconService
   ) { }
 
   ngOnInit(): void {
@@ -83,11 +83,7 @@ export class CollegeManagementComponent implements OnInit, AfterViewInit, OnDest
   }
 
   refreshIcons(): void {
-    setTimeout(() => {
-      if (typeof lucide !== 'undefined') {
-        lucide.createIcons();
-      }
-    }, 50);
+    this.iconService.refreshIcons();
   }
 
   loadColleges(): void {
@@ -450,4 +446,13 @@ export class CollegeManagementComponent implements OnInit, AfterViewInit, OnDest
       }
     );
   }
+
+  hasActionAccess(actionId: string): boolean {
+    const user = this.cctvService.userDetails;
+    if (!user) return false;
+    if (user.role === 'SUPER_ADMIN') return true;
+    return user.permissions?.actions?.includes(actionId) || false;
+  }
+
+  trackByCollegeId(index: number, college: any): string { return college.id; }
 }
