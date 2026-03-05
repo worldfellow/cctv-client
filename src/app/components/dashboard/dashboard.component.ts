@@ -7,7 +7,7 @@ import { CctvService, College } from '../../services/cctv.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
-declare var lucide: any;
+import { IconService } from '../../services/icon.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -43,7 +43,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
   constructor(
     private cctvService: CctvService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private iconService: IconService
   ) { }
 
   ngOnInit(): void {
@@ -59,8 +60,26 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   loadColleges(): void {
     this.cctvService.getAllActiveColleges().pipe(takeUntil(this.destroy$)).subscribe({
       next: (colleges) => {
-        this.colleges = colleges;
-        this.filteredColleges = colleges;
+        const user = this.cctvService.userDetails;
+
+        if (user && user.role !== 'SUPER_ADMIN') {
+          const allowed = user.allowedColleges || [];
+          if (allowed.includes('ALL')) {
+            this.colleges = colleges;
+          } else {
+            this.colleges = colleges.filter(c => allowed.includes(c.id));
+          }
+        } else {
+          this.colleges = colleges;
+        }
+
+        this.filteredColleges = this.colleges;
+
+        if (this.colleges.length === 0) {
+          this.isLoading = false;
+          this.refreshIcons();
+          return;
+        }
 
         if (this.colleges.length > 0 && !this.selectedCollegeId) {
           this.selectCollege(this.colleges[0]);
@@ -72,7 +91,11 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
           }
         }
       },
-      error: (err) => console.error('Error loading colleges:', err)
+      error: (err) => {
+        console.error('Error loading colleges:', err);
+        this.isLoading = false;
+        this.refreshIcons();
+      }
     });
   }
 
@@ -118,7 +141,15 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
-          this.feeds = response.data;
+          this.feeds = response.data.map((feed: any) => ({
+            id: feed.id,
+            name: feed.name || 'Unknown Camera',
+            location: feed.location || 'Unknown Location',
+            status: feed.status ? feed.status.toLowerCase() as 'online' | 'offline' : 'offline',
+            thumbnail: feed.thumbnail || 'assets/placeholder-camera.png',
+            streamUrl: feed.streamUrl,
+            wsUrl: feed.wsUrl
+          }));
           this.totalItems = response.total;
           this.totalPages = response.totalPages;
           this.isLoading = false;
@@ -172,18 +203,33 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   refreshIcons(): void {
-    setTimeout(() => {
-      if (typeof lucide !== 'undefined') {
-        lucide.createIcons();
-      }
-    }, 0);
+    this.iconService.refreshIcons();
   }
 
   onViewDetail(feed: CctvFeed): void {
-    this.selectedFeed = feed;
+    if (feed.status !== 'online') return;
+
+    // Call server to ensure high quality stream is started
+    this.cctvService.startCameraStream(feed.id, 'high').pipe(takeUntil(this.destroy$)).subscribe({
+      next: (res) => {
+        // Create a copy of feed with the high-quality wsUrl
+        this.selectedFeed = { ...feed, wsUrl: res.wsUrl };
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Failed to start high quality stream:', err);
+        // Fallback to existing wsUrl if any
+        this.selectedFeed = feed;
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   onCloseViewer(): void {
     this.selectedFeed = null;
   }
+
+  trackByCollegeId(index: number, college: any): string { return college.id; }
+  trackByFeedId(index: number, feed: any): string { return feed.id; }
+  trackByIdentity(index: number, item: any): any { return item; }
 }

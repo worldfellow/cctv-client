@@ -1,9 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ToastService, Toast } from '../../../services/toast.service';
+import { IconService } from '../../../services/icon.service';
 import { trigger, state, style, transition, animate } from '@angular/animations';
-
-declare var lucide: any;
 
 @Component({
   selector: 'app-toast',
@@ -27,6 +26,7 @@ declare var lucide: any;
     </div>
   `,
   styles: `
+    /* ... existing styles ... */
     .toast-container {
       position: fixed;
       bottom: 24px;
@@ -120,11 +120,14 @@ declare var lucide: any;
   ]
 })
 export class ToastComponent {
-  constructor(public toastService: ToastService) {
-    // Refresh icons when a new toast is added
-    // We can't perfectly lifecycle hook *every* new element simply here, 
-    // but typically Angular handles the view update. Lucide needs explicit re-rendering for new icons.
-    this.refreshIconsPeriodically();
+  constructor(
+    public toastService: ToastService,
+    private iconService: IconService
+  ) {
+    effect(() => {
+      this.toastService.toasts();
+      this.refreshIcons();
+    });
   }
 
   getIcon(type: string): string {
@@ -140,11 +143,7 @@ export class ToastComponent {
     this.toastService.remove(id);
   }
 
-  private refreshIconsPeriodically() {
-    setInterval(() => {
-      if (typeof lucide !== 'undefined') {
-        lucide.createIcons();
-      }
-    }, 500); // Polling for newly rendered toast icons
+  private refreshIcons() {
+    this.iconService.refreshIcons();
   }
 }

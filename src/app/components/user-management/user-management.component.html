@@ -11,12 +11,13 @@
                 <input type="text" placeholder="Search users..." [(ngModel)]="searchQuery" (keyup.enter)="onSearch()"
                     (input)="onSearch()">
             </div>
-            <button class="btn-secondary tooltip" (click)="openBulkUploadModal()">
+            <button *ngIf="hasActionAccess('user_create')" class="btn-secondary tooltip"
+                (click)="openBulkUploadModal()">
                 <lucide-icon name="folder-up"></lucide-icon>
                 <span>Bulk Import</span>
                 <span class="tooltip-text">Bulk Import Users</span>
             </button>
-            <button class="add-user-btn tooltip" (click)="openAddModal()">
+            <button *ngIf="hasActionAccess('user_create')" class="add-user-btn tooltip" (click)="openAddModal()">
                 <lucide-icon name="user-plus"></lucide-icon>
                 <span>Add User</span>
                 <span class="tooltip-text">Add New User</span>
@@ -25,7 +26,7 @@
     </div>
 
     <!-- Bulk Action Bar -->
-    <div class="bulk-action-bar glass-morphism" *ngIf="selectedUserIds.size > 0">
+    <div class="bulk-action-bar glass-morphism" *ngIf="selectedUserIds.size > 0 && hasActionAccess('user_bulk')">
         <div class="selection-info tooltip">
             <i data-lucide="check-square"></i>
             <span class="tooltip-text">Selection Mode</span>
@@ -76,7 +77,8 @@
                     </tr>
                 </thead>
                 <tbody [class.loading-fade]="isLoading">
-                    <tr *ngFor="let user of users" [class.selected-row]="selectedUserIds.has(user.id!)">
+                    <tr *ngFor="let user of users; trackBy: trackByUserId"
+                        [class.selected-row]="selectedUserIds.has(user.id!)">
                         <td class="checkbox-col">
                             <label class="custom-checkbox">
                                 <input type="checkbox" [checked]="selectedUserIds.has(user.id!)"
@@ -88,7 +90,7 @@
                             <div class="user-cell">
                                 <div class="avatar">
                                     <img [src]="'https://ui-avatars.com/api/?name=' + user.firstName + '+' + user.lastName + '&background=6366f1&color=fff'"
-                                        alt="">
+                                        alt="" loading="lazy">
                                 </div>
                                 <div class="user-info">
                                     <span class="name">{{ user.firstName }} {{ user.lastName }}</span>
@@ -122,15 +124,18 @@
                         </td>
                         <td>
                             <div class="action-buttons">
-                                <button class="action-btn edit tooltip" (click)="openEditModal(user)">
+                                <button *ngIf="hasActionAccess('user_edit')" class="action-btn edit tooltip"
+                                    (click)="openEditModal(user)">
                                     <i data-lucide="edit-3"></i>
                                     <span class="tooltip-text">Edit User</span>
                                 </button>
-                                <button class="action-btn reset tooltip" (click)="resetPassword(user)">
+                                <button *ngIf="hasActionAccess('user_reset')" class="action-btn reset tooltip"
+                                    (click)="resetPassword(user)">
                                     <i data-lucide="key"></i>
                                     <span class="tooltip-text">Reset Password</span>
                                 </button>
-                                <button class="action-btn delete tooltip" (click)="deleteUser(user.id!)">
+                                <button *ngIf="hasActionAccess('user_delete')" class="action-btn delete tooltip"
+                                    (click)="deleteUser(user.id!)">
                                     <i data-lucide="trash-2"></i>
                                     <span class="tooltip-text">Delete User</span>
                                 </button>
@@ -273,17 +278,40 @@
 
                     <div class="form-group">
                         <label>Role</label>
-                        <div class="input-wrapper">
-                            <i data-lucide="shield" class="input-icon"></i>
-                            <select name="role" [(ngModel)]="currentUser.role" #role="ngModel" required>
-                                <option value="SUPER_ADMIN">SUPER ADMIN</option>
-                                <option value="ADMIN">ADMIN</option>
-                                <option value="OPERATOR">OPERATOR</option>
-                                <option value="VIEWER">VIEWER</option>
-                            </select>
+
+                        <!-- Dropdown Mode -->
+                        <div *ngIf="!isAddingNewRole">
+                            <div class="input-wrapper">
+                                <i data-lucide="shield" class="input-icon"></i>
+                                <select name="role" [(ngModel)]="currentUser.role" #roleRef="ngModel" required
+                                    (change)="onRoleChange()">
+                                    <option *ngFor="let r of roles; trackBy: trackByRoleId" [value]="r.roleName">
+                                        {{r.roleName}}</option>
+                                    <option value="ADD_NEW">+ Add New Role</option>
+                                </select>
+                            </div>
+                            <div *ngIf="roleRef.invalid && (roleRef.dirty || roleRef.touched)" class="validation-error">
+                                <span *ngIf="roleRef.errors?.['required']">Role is required.</span>
+                            </div>
                         </div>
-                        <div *ngIf="role.invalid && (role.dirty || role.touched)" class="validation-error">
-                            <span *ngIf="role.errors?.['required']">Role is required.</span>
+
+                        <!-- Add New Role Mode -->
+                        <div *ngIf="isAddingNewRole">
+                            <div class="input-wrapper">
+                                <i data-lucide="shield" class="input-icon"></i>
+                                <div class="new-role-input-group">
+                                    <input type="text" name="newRole" [(ngModel)]="newRoleName"
+                                        placeholder="Enter new role name" class="flex-1" required #newRoleRef="ngModel">
+                                    <button type="button" class="btn-icon text-red-500" (click)="cancelNewRole()"
+                                        title="Cancel">
+                                        <i data-lucide="x"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div *ngIf="newRoleRef.invalid && (newRoleRef.dirty || newRoleRef.touched)"
+                                class="validation-error">
+                                <span *ngIf="newRoleRef.errors?.['required']">Role name is required.</span>
+                            </div>
                         </div>
                     </div>
 
@@ -304,7 +332,8 @@
                                         placeholder="Search college..." (click)="$event.stopPropagation()">
                                 </div>
                                 <div class="options-list">
-                                    <div class="option" *ngFor="let college of filteredColleges"
+                                    <div class="option"
+                                        *ngFor="let college of filteredColleges; trackBy: trackByCollegeId"
                                         (click)="selectCollege(college)"
                                         [class.selected]="currentUser.collegeId === college.id">
                                         {{ college.name }}
@@ -337,7 +366,7 @@
 
     <!-- Bulk Upload Modal -->
     <div class="modal-overlay" *ngIf="isBulkUploadModalOpen" (click)="closeBulkUploadModal()">
-        <div class="modal-container bulk-modal" (click)="$event.stopPropagation()">
+        <div class="modal-content bulk-modal glass-morphism" (click)="$event.stopPropagation()">
             <div class="modal-header">
                 <div class="header-content">
                     <div class="title-row">
@@ -346,7 +375,7 @@
                     </div>
                     <p class="subtitle">Upload an Excel file to add multiple users at once</p>
                 </div>
-                <button class="btn-close tooltip" (click)="closeBulkUploadModal()">
+                <button class="close-btn tooltip" (click)="closeBulkUploadModal()">
                     <lucide-icon name="x"></lucide-icon>
                     <span class="tooltip-text">Close</span>
                 </button>
@@ -396,7 +425,7 @@
                             <span>Validation Errors ({{ bulkUploadErrors.length }})</span>
                         </div>
                         <ul class="error-list">
-                            <li *ngFor="let err of bulkUploadErrors">{{ err }}</li>
+                            <li *ngFor="let err of bulkUploadErrors; trackBy: trackByIndex">{{ err }}</li>
                         </ul>
                     </div>
                 </div>
@@ -425,7 +454,8 @@
                         <div class="failure-details" *ngIf="uploadResults.results.details.length > 0">
                             <h4>Failure Details:</h4>
                             <div class="details-list">
-                                <div class="detail" *ngFor="let detail of uploadResults.results.details">
+                                <div class="detail"
+                                    *ngFor="let detail of uploadResults.results.details; trackBy: trackByIndex">
                                     {{ detail }}
                                 </div>
                             </div>

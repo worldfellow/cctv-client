@@ -1,0 +1,165 @@
+<div class="gallery-container">
+    <header class="gallery-header glass-morphism">
+        <div class="header-info">
+            <h1 class="title gradient-text">Evidence Gallery</h1>
+            <p class="subtitle">Search and manage captured surveillance screenshots</p>
+        </div>
+    </header>
+
+    <div class="filter-bar glass-morphism">
+        <div class="filter-group">
+            <label>College</label>
+            <select [(ngModel)]="filterCollege" (change)="filterScreenshots()">
+                <option value="">All Colleges</option>
+                <option *ngFor="let college of colleges; trackBy: trackByCollegeName" [value]="college.name">{{
+                    college.name }}</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label>Camera Name</label>
+            <input type="text" placeholder="Search camera..." [(ngModel)]="filterCameraName"
+                (input)="filterScreenshots()">
+        </div>
+
+        <div class="filter-group">
+            <label>Start Date</label>
+            <input type="date" [(ngModel)]="filterStartDate" (change)="filterScreenshots()">
+        </div>
+
+        <div class="filter-group">
+            <label>End Date</label>
+            <input type="date" [(ngModel)]="filterEndDate" (change)="filterScreenshots()">
+        </div>
+
+        <div class="filter-actions">
+            <button class="clear-btn" (click)="clearFilters()">
+                <i data-lucide="trash-2"></i>
+                <span>Clear All</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="gallery-controls glass-morphism"
+        *ngIf="!isLoading && filteredScreenshots.length > 0 && hasActionAccess('screenshot_bulk')">
+        <div class="selection-group">
+            <label class="custom-checkbox-btn" [class.active]="selectedScreenshotIds.size > 0">
+                <input type="checkbox" class="hidden-checkbox" [checked]="isAllSelected()"
+                    (change)="toggleSelectAll()" />
+                <span class="checkmark"></span>
+                <span class="label-text">Select All on Page</span>
+                <span class="badge" *ngIf="selectedScreenshotIds.size > 0">{{ selectedScreenshotIds.size }}
+                    Selected</span>
+            </label>
+        </div>
+
+        <div class="action-group">
+            <button class="control-btn clear" (click)="clearSelection()" *ngIf="selectedScreenshotIds.size > 0"
+                title="Clear Selection">
+                <i data-lucide="x-circle"></i>
+                <span>Clear Selection</span>
+            </button>
+            <button class="control-btn delete" (click)="deleteSelectedParams()" *ngIf="selectedScreenshotIds.size > 0"
+                [disabled]="isDeleting">
+                <i data-lucide="trash-2"></i>
+                <span>{{ isDeleting ? 'Deleting...' : 'Delete Selected' }}</span>
+            </button>
+            <div class="divider" *ngIf="selectedScreenshotIds.size > 0"></div>
+            <button class="control-btn refresh" (click)="loadScreenshots()" [class.spinning]="isLoading"
+                title="Refresh Gallery">
+                <i data-lucide="refresh-cw"></i>
+                <span>Refresh</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="gallery-grid" *ngIf="!isLoading; else loadingState">
+        <div class="screenshot-card glass-morphism" *ngFor="let s of filteredScreenshots; trackBy: trackByScreenshotId"
+            [class.selected]="selectedScreenshotIds.has(s.id)" (click)="openLightbox(s)">
+
+            <div class="image-wrapper">
+                <label class="card-checkbox-wrapper" (click)="$event.stopPropagation()">
+                    <input type="checkbox" class="hidden-checkbox" [checked]="selectedScreenshotIds.has(s.id)"
+                        (change)="toggleSelection($event, s.id)" />
+                    <span class="checkmark"></span>
+                </label>
+                <img [src]="getFullImageUrl(s.imageUrl)" alt="Screenshot" loading="lazy">
+                <div class="overlay">
+                    <i data-lucide="maximize-2"></i>
+                </div>
+            </div>
+            <div class="card-content">
+                <div class="main-info">
+                    <span class="college-name">{{ s.collegeName }}</span>
+                    <span class="camera-id">Cam: {{ s.cameraName }}</span>
+                </div>
+                <div class="sub-info">
+                    <span class="location"><i data-lucide="map-pin"></i> {{ s.location }}</span>
+                    <span class="timestamp"><i data-lucide="clock"></i> {{ s.date }} {{ s.time }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination Controls -->
+    <div class="pagination-container glass-morphism" *ngIf="!isLoading && totalItems > 0">
+        <div class="pagination-info">
+            Showing {{ (currentPage - 1) * pageSize + 1 }} - {{ Math.min(currentPage * pageSize, totalItems) }} of {{
+            totalItems }} items
+        </div>
+
+        <div class="pagination-controls">
+            <button class="page-btn" [disabled]="currentPage === 1" (click)="changePage(currentPage - 1)">
+                <i data-lucide="chevron-left"></i>
+            </button>
+
+            <span class="page-current">Page {{ currentPage }} of {{ totalPages }}</span>
+
+            <button class="page-btn" [disabled]="currentPage === totalPages" (click)="changePage(currentPage + 1)">
+                <i data-lucide="chevron-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="empty-state glass-morphism" *ngIf="!isLoading && filteredScreenshots.length === 0">
+        <i data-lucide="image-off"></i>
+        <p>No screenshots found matching your filters.</p>
+    </div>
+
+    <ng-template #loadingState>
+        <div class="loading-grid">
+            <div class="skeleton-card glass-morphism" *ngFor="let i of [1,2,3,4,5,6]; trackBy: trackByIndex">
+                <div class="skeleton-img"></div>
+                <div class="skeleton-text"></div>
+            </div>
+        </div>
+    </ng-template>
+
+    <!-- Lightbox Modal -->
+    <div class="lightbox-backdrop" *ngIf="selectedScreenshot" (click)="closeLightbox()">
+        <div class="lightbox-content glass-morphism" (click)="$event.stopPropagation()">
+            <button class="close-btn" (click)="closeLightbox()">
+                <i data-lucide="x"></i>
+            </button>
+
+            <div class="lightbox-img-container">
+                <img [src]="getFullImageUrl(selectedScreenshot.imageUrl)" alt="Full View">
+            </div>
+
+            <div class="lightbox-footer">
+                <div class="footer-details">
+                    <h3>{{ selectedScreenshot.collegeName }} - {{ selectedScreenshot.cameraName }}</h3>
+                    <p><i data-lucide="map-pin"></i> {{ selectedScreenshot.location }} | <i data-lucide="calendar"></i>
+                        {{ selectedScreenshot.date }} {{ selectedScreenshot.time }}</p>
+                </div>
+                <div class="footer-actions">
+                    <button class="download-btn"
+                        (click)="triggerDownload(getFullImageUrl(selectedScreenshot.imageUrl))">
+                        <i data-lucide="download"></i>
+                        <span>Download</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

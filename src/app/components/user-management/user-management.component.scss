@@ -671,6 +671,38 @@
                     background: var(--bg-dark);
                 }
             }
+
+            .new-role-input-group {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                width: 100%;
+
+                input {
+                    padding-right: 0.75rem !important; // Override the icon padding if needed
+                }
+
+                .btn-icon {
+                    background: none;
+                    border: none;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 0.25rem;
+                    border-radius: 6px;
+                    transition: var(--transition);
+
+                    &:hover {
+                        background: rgba(239, 68, 68, 0.1);
+                    }
+
+                    ::ng-deep svg {
+                        width: 18px;
+                        height: 18px;
+                    }
+                }
+            }
         }
     }
 }

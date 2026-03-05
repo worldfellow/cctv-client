@@ -13,20 +13,27 @@
         <div class="video-section">
             <div class="video-wrapper">
                 <ng-container *ngIf="feed.wsUrl && feed.status === 'online'; else otherFeeds">
-                    <canvas #canvas class="video-feed"></canvas>
+                    <canvas #canvas class="video-feed" [style.transform]="'scale(' + controls.zoomScale + ')'"></canvas>
                 </ng-container>
                 <ng-template #otherFeeds>
-                    <video *ngIf="feed.streamUrl; else useThumbnail" [src]="feed.streamUrl" [poster]="feed.thumbnail"
-                        class="video-feed" autoplay muted controls></video>
+                    <video #video *ngIf="feed.streamUrl; else useThumbnail" [src]="feed.streamUrl"
+                        [poster]="feed.thumbnail" class="video-feed" autoplay muted controls
+                        [style.transform]="'scale(' + controls.zoomScale + ')'"></video>
                     <ng-template #useThumbnail>
-                        <img [src]="feed.thumbnail" class="video-feed" alt="Live Feed">
+                        <img [src]="feed.thumbnail" class="video-feed" alt="Live Feed"
+                            [style.transform]="'scale(' + controls.zoomScale + ')'">
                     </ng-template>
                 </ng-template>
 
                 <div class="video-overlay-top">
-                    <div class="rec-indicator" *ngIf="controls.isRecording">
-                        <span class="rec-dot"></span>
-                        REC
+                    <div class="overlay-left">
+                        <div class="rec-indicator" *ngIf="controls.isRecording">
+                            <span class="rec-dot"></span>
+                            REC
+                        </div>
+                        <div class="quality-badge" [class.hd]="currentQuality === 'high'">
+                            {{ currentQuality === 'high' ? 'HD' : 'SD' }}
+                        </div>
                     </div>
                     <div class="timestamp">
                         {{ '2026-02-18 11:54:22' }} <!-- Simulated live timestamp -->
@@ -35,33 +42,36 @@
 
                 <div class="video-controls">
                     <div class="control-group">
-                        <button class="control-btn" (click)="toggleRecording()" [class.active]="controls.isRecording"
-                            title="Toggle Recording">
-                            <i data-lucide="circle"></i>
-                        </button>
-                        <button class="control-btn" (click)="toggleMute()" [class.active]="controls.isMuted"
-                            title="Toggle Mute">
-                            <i [attr.data-lucide]="controls.isMuted ? 'volume-x' : 'volume-2'"></i>
+                        <button class="control-btn" (click)="toggleQuality()" [class.active]="currentQuality === 'high'"
+                            title="Toggle Quality (HD/SD)">
+                            <i data-lucide="settings-2"></i>
+                            <span class="btn-label">{{ currentQuality === 'high' ? 'HD' : 'SD' }}</span>
                         </button>
                     </div>
 
                     <div class="control-group center">
-                        <button class="control-btn" title="Rewind 10s"><i data-lucide="rotate-ccw"></i></button>
-                        <button class="control-btn play" title="Play/Pause"><i data-lucide="play"></i></button>
-                        <button class="control-btn" title="Forward 10s"><i data-lucide="rotate-cw"></i></button>
+                        <button class="control-btn" (click)="setZoom(-0.2)" title="Zoom Out"
+                            [disabled]="controls.zoomScale <= 1">
+                            <i data-lucide="zoom-out"></i>
+                        </button>
+                        <div class="zoom-level" (click)="resetZoom()">{{ (controls.zoomScale * 100).toFixed(0) }}%</div>
+                        <button class="control-btn" (click)="setZoom(0.2)" title="Zoom In"
+                            [disabled]="controls.zoomScale >= 3">
+                            <i data-lucide="zoom-in"></i>
+                        </button>
                     </div>
 
                     <div class="control-group">
                         <button class="control-btn" (click)="toggleFullscreen()" title="Full Screen">
                             <i data-lucide="maximize"></i>
                         </button>
-                        <button class="control-btn" title="Screenshot"><i data-lucide="camera"></i></button>
-                        <button class="control-btn" title="Settings"><i data-lucide="settings"></i></button>
+                        <button class="control-btn" (click)="captureScreenshot()" title="Screenshot"><i
+                                data-lucide="camera"></i></button>
                     </div>
                 </div>
             </div>
 
-            <div class="sidebar-info glass-morphism">
+            <!-- <div class="sidebar-info glass-morphism">
                 <h3>Feed Analysis</h3>
                 <div class="analysis-item">
                     <span class="label">Resolution</span>
@@ -97,7 +107,7 @@
                         <span class="desc">System check: All sensors OK</span>
                     </div>
                 </div>
-            </div>
+            </div> -->
         </div>
     </div>
 </div>

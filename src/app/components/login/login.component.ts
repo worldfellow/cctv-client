@@ -2,11 +2,12 @@ import { Component, OnInit, AfterViewInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import Keycloak from 'keycloak-js';
 import { CctvService } from '../../services/cctv.service';
 import { environment } from '../../../environments/environment';
 
-declare var lucide: any;
+import { IconService } from '../../services/icon.service';
 
 @Component({
   selector: 'app-login',
@@ -19,6 +20,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
   private router = inject(Router);
   private keycloak = inject(Keycloak);
   private cctvService = inject(CctvService);
+  private iconService = inject(IconService);
 
   loginData = {
     email: '',
@@ -27,6 +29,10 @@ export class LoginComponent implements OnInit, AfterViewInit {
 
   errorMessage = '';
   isLoading = false;
+
+  get config$() {
+    return this.cctvService.systemConfig$;
+  }
 
   // Change password modal state
   showChangePassword = false;
@@ -316,25 +322,33 @@ export class LoginComponent implements OnInit, AfterViewInit {
 
   private async loadProfileAndNavigate(): Promise<void> {
     try {
-      const profile = await this.keycloak.loadUserProfile();
-      this.cctvService.setUserDetails({
-        keycloakId: profile.id || '',
-        firstName: profile.firstName || '',
-        lastName: profile.lastName || '',
-        email: profile.email || '',
-        mobileNo: '',
-        role: this.getRoleFromToken()
-      });
+      // Fetch full user profile from our backend after Keycloak authentication
+      await firstValueFrom(this.cctvService.getProfile());
     } catch (error) {
-      console.error('Failed to load user profile:', error);
-      this.cctvService.setUserDetails({
-        keycloakId: (this.keycloak as any).tokenParsed?.sub || '',
-        firstName: (this.keycloak as any).tokenParsed?.given_name || '',
-        lastName: (this.keycloak as any).tokenParsed?.family_name || '',
-        email: (this.keycloak as any).tokenParsed?.email || '',
-        mobileNo: '',
-        role: this.getRoleFromToken()
-      });
+      console.error('Failed to load full user profile after login:', error);
+
+      // Fallback to Keycloak profile if backend fails
+      try {
+        const profile = await this.keycloak.loadUserProfile();
+        this.cctvService.setUserDetails({
+          keycloakId: profile.id || '',
+          firstName: profile.firstName || '',
+          lastName: profile.lastName || '',
+          email: profile.email || '',
+          mobileNo: '',
+          role: this.getRoleFromToken()
+        });
+      } catch (profileError) {
+        console.error('Failed to load user profile fallback:', profileError);
+        this.cctvService.setUserDetails({
+          keycloakId: (this.keycloak as any).tokenParsed?.sub || '',
+          firstName: (this.keycloak as any).tokenParsed?.given_name || '',
+          lastName: (this.keycloak as any).tokenParsed?.family_name || '',
+          email: (this.keycloak as any).tokenParsed?.email || '',
+          mobileNo: '',
+          role: this.getRoleFromToken()
+        });
+      }
     }
     this.router.navigate(['/dashboard']);
   }
@@ -354,11 +368,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
   }
 
   private refreshIcons(): void {
-    setTimeout(() => {
-      if (typeof lucide !== 'undefined') {
-        lucide.createIcons();
-      }
-    }, 0);
+    this.iconService.refreshIcons();
   }
 }
 

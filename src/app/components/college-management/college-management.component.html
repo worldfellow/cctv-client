@@ -25,7 +25,7 @@
     </div>
 
     <!-- Bulk Action Bar -->
-    <div class="bulk-action-bar glass-morphism" *ngIf="selectedCollegeIds.size > 0">
+    <div class="bulk-action-bar glass-morphism" *ngIf="selectedCollegeIds.size > 0 && hasActionAccess('college_bulk')">
         <div class="selection-info">
             <i data-lucide="check-square"></i>
             <span>{{ selectedCollegeIds.size }} college(s) selected</span>
@@ -74,7 +74,8 @@
                     </tr>
                 </thead>
                 <tbody [class.loading-fade]="isLoading">
-                    <tr *ngFor="let college of colleges" [class.selected-row]="selectedCollegeIds.has(college.id)">
+                    <tr *ngFor="let college of colleges; trackBy: trackByCollegeId"
+                        [class.selected-row]="selectedCollegeIds.has(college.id)">
                         <td class="checkbox-col">
                             <label class="custom-checkbox">
                                 <input type="checkbox" [checked]="selectedCollegeIds.has(college.id)"

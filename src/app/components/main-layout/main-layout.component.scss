@@ -93,6 +93,12 @@
         display: flex;
         align-items: center;
         gap: 0.75rem;
+        cursor: pointer;
+        transition: opacity 0.2s ease;
+
+        &:hover {
+            opacity: 0.8;
+        }
 
         .logo-icon {
             width: 32px;
@@ -100,11 +106,123 @@
             color: var(--primary);
         }
 
+        .logo-img {
+            height: 48px;
+            width: auto;
+            max-width: 180px;
+            object-fit: contain;
+        }
+
         .logo-text {
             font-size: 1.25rem;
             font-weight: 700;
             color: var(--text-main);
             white-space: nowrap;
+        }
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.enlarged-logo-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+
+    .enlarged-logo-container {
+        position: relative;
+        background: var(--card-bg);
+        padding: 2rem;
+        border-radius: 24px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        border: 1px solid var(--card-border);
+        max-width: 90vw;
+        max-height: 90vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        animation: scaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+        .close-btn {
+            position: absolute;
+            top: -15px;
+            right: -15px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s ease;
+
+            &:hover {
+                transform: scale(1.1);
+                background: var(--primary-hover);
+            }
+
+            i,
+            ::ng-deep svg {
+                width: 20px;
+                height: 20px;
+            }
+        }
+
+        img {
+            max-width: 800px;
+            max-height: 80vh;
+            object-fit: contain;
+        }
+
+        .placeholder-large {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+            padding: 4rem;
+
+            i,
+            ::ng-deep svg {
+                width: 120px;
+                height: 120px;
+                color: var(--primary);
+            }
+
+            h2 {
+                font-size: 2.5rem;
+                color: var(--text-main);
+                background: linear-gradient(135deg, var(--text-main) 0%, var(--primary) 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
         }
     }
 }

@@ -25,7 +25,7 @@
                                 (click)="$event.stopPropagation()">
                         </div>
                         <div class="options-list">
-                            <div class="option" *ngFor="let college of filteredColleges"
+                            <div class="option" *ngFor="let college of filteredColleges; trackBy: trackByCollegeId"
                                 [class.selected]="college.id === selectedCollegeId" (click)="selectCollege(college)">
                                 {{ college.name }}
                             </div>
@@ -41,8 +41,8 @@
                 <span class="label">Show</span>
                 <div class="limit-controls">
                     <div class="limit-buttons">
-                        <button *ngFor="let opt of limitOptions" [class.active]="pageSize === opt"
-                            (click)="onLimitChange(opt)">{{ opt }}</button>
+                        <button *ngFor="let opt of limitOptions; trackBy: trackByIdentity"
+                            [class.active]="pageSize === opt" (click)="onLimitChange(opt)">{{ opt }}</button>
                     </div>
                     <button class="reset-btn" (click)="resetLimit()" title="Reset to 10">
                         <i data-lucide="refresh-cw"></i>
@@ -88,7 +88,8 @@
         </div>
 
         <div class="feed-grid" *ngIf="feeds.length > 0; else noFeeds">
-            <app-cctv-card *ngFor="let feed of feeds" [feed]="feed" (viewDetail)="onViewDetail($event)"></app-cctv-card>
+            <app-cctv-card *ngFor="let feed of feeds; trackBy: trackByFeedId" [feed]="feed"
+                (viewDetail)="onViewDetail($event)"></app-cctv-card>
         </div>
 
         <ng-template #noFeeds>
@@ -129,4 +130,5 @@
 </div>
 
 <!-- Full View Modal -->
-<app-cctv-viewer *ngIf="selectedFeed" [feed]="selectedFeed" (close)="onCloseViewer()"></app-cctv-viewer>
+<app-cctv-viewer *ngIf="selectedFeed" [feed]="selectedFeed" [collegeName]="selectedCollegeName"
+    (close)="onCloseViewer()"></app-cctv-viewer>

@@ -1,24 +1,25 @@
 import { Routes } from '@angular/router';
-import { LoginComponent } from './components/login/login.component';
-import { DashboardComponent } from './components/dashboard/dashboard.component';
-import { UserManagementComponent } from './components/user-management/user-management.component';
-import { CollegeManagementComponent } from './components/college-management/college-management.component';
-import { CameraRegistrationComponent } from './components/camera-registration/camera-registration.component';
 import { MainLayoutComponent } from './components/main-layout/main-layout.component';
 import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
     { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-    { path: 'login', component: LoginComponent },
+    {
+        path: 'login',
+        loadComponent: () => import('./components/login/login.component').then(m => m.LoginComponent)
+    },
     {
         path: '',
         component: MainLayoutComponent,
         canActivate: [authGuard],
         children: [
-            { path: 'dashboard', component: DashboardComponent },
-            { path: 'users', component: UserManagementComponent },
-            { path: 'colleges', component: CollegeManagementComponent },
-            { path: 'add-camera', component: CameraRegistrationComponent }
+            { path: 'dashboard', loadComponent: () => import('./components/dashboard/dashboard.component').then(m => m.DashboardComponent) },
+            { path: 'users', loadComponent: () => import('./components/user-management/user-management.component').then(m => m.UserManagementComponent) },
+            { path: 'colleges', loadComponent: () => import('./components/college-management/college-management.component').then(m => m.CollegeManagementComponent) },
+            { path: 'add-camera', loadComponent: () => import('./components/camera-registration/camera-registration.component').then(m => m.CameraRegistrationComponent) },
+            { path: 'access-control', loadComponent: () => import('./components/access-control/access-control.component').then(m => m.AccessControlComponent) },
+            { path: 'screenshots', loadComponent: () => import('./components/screenshot-gallery/screenshot-gallery.component').then(m => m.ScreenshotGalleryComponent) },
+            { path: 'branding-settings', loadComponent: () => import('./components/branding-settings/branding-settings.component').then(m => m.BrandingSettingsComponent) }
         ]
     },
     { path: '**', redirectTo: 'login' }
