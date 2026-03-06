@@ -64,6 +64,9 @@ export class UserManagementComponent implements OnInit, AfterViewInit, OnDestroy
   uploadResults: any = null;
   selectedFile: File | null = null;
   bulkUploadErrors: string[] = [];
+  modalErrorMessage: string = '';
+  bulkUploadGeneralError: string = '';
+  confirmModalErrorMessage: string = '';
 
   private destroy$ = new Subject<void>();
 
@@ -314,8 +317,8 @@ export class UserManagementComponent implements OnInit, AfterViewInit, OnDestroy
           },
           error: (err) => {
             this.isSaving = false;
-            this.toastService.show('Failed to activate users', 'error');
-            this.closeConfirmModal();
+            this.confirmModalErrorMessage = err.error?.message || 'Failed to activate users';
+            this.toastService.show(this.confirmModalErrorMessage, 'error');
           }
         });
       }
@@ -340,8 +343,8 @@ export class UserManagementComponent implements OnInit, AfterViewInit, OnDestroy
           },
           error: (err) => {
             this.isSaving = false;
-            this.toastService.show('Failed to deactivate users', 'error');
-            this.closeConfirmModal();
+            this.confirmModalErrorMessage = err.error?.message || 'Failed to deactivate users';
+            this.toastService.show(this.confirmModalErrorMessage, 'error');
           }
         });
       }
@@ -366,8 +369,8 @@ export class UserManagementComponent implements OnInit, AfterViewInit, OnDestroy
           },
           error: (err) => {
             this.isSaving = false;
-            this.toastService.show('Failed to delete users', 'error');
-            this.closeConfirmModal();
+            this.confirmModalErrorMessage = err.error?.message || 'Failed to delete users';
+            this.toastService.show(this.confirmModalErrorMessage, 'error');
           }
         });
       }
@@ -380,6 +383,7 @@ export class UserManagementComponent implements OnInit, AfterViewInit, OnDestroy
     this.confirmModalMessage = message;
     this.confirmModalBtnText = btnText;
     this.pendingConfirmAction = action;
+    this.confirmModalErrorMessage = '';
     this.isConfirmModalOpen = true;
   }
 
@@ -404,6 +408,7 @@ export class UserManagementComponent implements OnInit, AfterViewInit, OnDestroy
     this.isAddingNewRole = false;
     this.newRoleName = '';
     this.currentUser = { firstName: '', lastName: '', email: '', mobileNo: '', role: 'STAFF', collegeId: '' };
+    this.modalErrorMessage = '';
     this.showModal = true;
   }
 
@@ -412,6 +417,7 @@ export class UserManagementComponent implements OnInit, AfterViewInit, OnDestroy
     this.isAddingNewRole = false;
     this.newRoleName = '';
     this.currentUser = { ...user };
+    this.modalErrorMessage = '';
     this.showModal = true;
   }
 
@@ -421,6 +427,7 @@ export class UserManagementComponent implements OnInit, AfterViewInit, OnDestroy
 
   saveUser(): void {
     this.isSaving = true;
+    this.modalErrorMessage = '';
 
     if (this.isAddingNewRole && this.newRoleName.trim()) {
       this.currentUser.role = this.newRoleName.trim();
@@ -441,9 +448,9 @@ export class UserManagementComponent implements OnInit, AfterViewInit, OnDestroy
         },
         error: (err) => {
           this.isSaving = false;
-          this.toastService.show('Failed to update user', 'error');
-          console.error('Update failed');
-          this.closeModal();
+          this.modalErrorMessage = err.error?.message || 'Failed to update user';
+          this.toastService.show(this.modalErrorMessage, 'error');
+          console.error('Update failed', err);
         }
       });
     } else {
@@ -458,9 +465,9 @@ export class UserManagementComponent implements OnInit, AfterViewInit, OnDestroy
         },
         error: (err) => {
           this.isSaving = false;
-          this.toastService.show('Failed to create user', 'error');
-          console.error('Create failed');
-          this.closeModal();
+          this.modalErrorMessage = err.error?.message || 'Failed to create user';
+          this.toastService.show(this.modalErrorMessage, 'error');
+          console.error('Create failed', err);
         }
       });
     }
@@ -483,9 +490,9 @@ export class UserManagementComponent implements OnInit, AfterViewInit, OnDestroy
           },
           error: (err) => {
             this.isSaving = false;
-            this.toastService.show('Failed to delete user', 'error');
-            this.closeConfirmModal();
-            console.error('Delete failed');
+            this.confirmModalErrorMessage = err.error?.message || 'Failed to delete user';
+            this.toastService.show(this.confirmModalErrorMessage, 'error');
+            console.error('Delete failed', err);
           }
         });
       }
@@ -510,9 +517,9 @@ export class UserManagementComponent implements OnInit, AfterViewInit, OnDestroy
           },
           error: (err) => {
             this.isSaving = false;
-            this.toastService.show('Failed to reset password', 'error');
-            this.closeConfirmModal();
-            console.error('Reset failed');
+            this.confirmModalErrorMessage = err.error?.message || 'Failed to reset password';
+            this.toastService.show(this.confirmModalErrorMessage, 'error');
+            console.error('Reset failed', err);
           }
         });
       }
@@ -526,6 +533,7 @@ export class UserManagementComponent implements OnInit, AfterViewInit, OnDestroy
   // Bulk Upload Methods
   openBulkUploadModal(): void {
     this.isBulkUploadModalOpen = true;
+    this.bulkUploadGeneralError = '';
     this.resetUploadState();
   }
 
@@ -543,6 +551,7 @@ export class UserManagementComponent implements OnInit, AfterViewInit, OnDestroy
     this.uploadResults = null;
     this.selectedFile = null;
     this.bulkUploadErrors = [];
+    this.bulkUploadGeneralError = '';
   }
 
   downloadTemplate(): void {
@@ -587,6 +596,7 @@ export class UserManagementComponent implements OnInit, AfterViewInit, OnDestroy
 
     this.isUploading = true;
     this.bulkUploadErrors = [];
+    this.bulkUploadGeneralError = '';
     const formData = new FormData();
     formData.append('file', this.selectedFile);
 
@@ -601,7 +611,8 @@ export class UserManagementComponent implements OnInit, AfterViewInit, OnDestroy
         if (err.error && err.error.errors) {
           this.bulkUploadErrors = err.error.errors;
         } else {
-          this.toastService.show(err.error?.message || 'Bulk upload failed', 'error');
+          this.bulkUploadGeneralError = err.error?.message || 'Bulk upload failed';
+          this.toastService.show(this.bulkUploadGeneralError, 'error');
         }
       }
     });

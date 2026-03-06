@@ -58,6 +58,8 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy {
     selectedFilterCollege: string = '';
     isLoading = false;
     isSaving = false;
+    registrationErrorMessage: string = '';
+    confirmErrorMessage: string = '';
 
     // Pagination
     currentPage: number = 1;
@@ -440,6 +442,7 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy {
     closeModal() {
         this.isModalOpen = false;
         this.editingRecord = null;
+        this.registrationErrorMessage = '';
         this.createForm();
     }
 
@@ -461,15 +464,15 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy {
                     this.isSaving = false;
                     this.isConfirmModalOpen = false;
                     this.itemToDelete = null;
+                    this.confirmErrorMessage = '';
                     this.toastService.show('Camera deleted successfully', 'success');
                     this.loadCameras();
                 },
                 error: (err) => {
                     console.error('Error deleting camera:', err);
                     this.isSaving = false;
-                    this.isConfirmModalOpen = false;
-                    this.itemToDelete = null;
-                    this.toastService.show('Failed to delete camera', 'error');
+                    this.confirmErrorMessage = err.error?.message || 'Failed to delete camera';
+                    this.toastService.show(this.confirmErrorMessage, 'error');
                 }
             });
         } else if (this.deviceToDelete) {
@@ -488,15 +491,15 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy {
                     this.isSaving = false;
                     this.isConfirmModalOpen = false;
                     this.deviceToDelete = null;
+                    this.confirmErrorMessage = '';
                     this.toastService.show('Camera device deleted successfully', 'success');
                     this.loadCameras();
                 },
                 error: (err) => {
                     console.error('Error deleting cameras:', err);
                     this.isSaving = false;
-                    this.isConfirmModalOpen = false;
-                    this.deviceToDelete = null;
-                    this.toastService.show('Failed to delete camera device', 'error');
+                    this.confirmErrorMessage = err.error?.message || 'Failed to delete camera device';
+                    this.toastService.show(this.confirmErrorMessage, 'error');
                 }
             });
         } else if (this.pendingBulkAction) {
@@ -509,6 +512,7 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy {
         this.itemToDelete = null;
         this.deviceToDelete = null;
         this.pendingBulkAction = null;
+        this.confirmErrorMessage = '';
     }
 
     toggleStatus(record: CameraRecord) {
@@ -540,6 +544,7 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy {
     onSubmit() {
         if (this.registrationForm.valid) {
             this.isSaving = true;
+            this.registrationErrorMessage = '';
             const formValue = this.registrationForm.value;
 
             // Trim data recursively before saving
@@ -565,7 +570,8 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy {
                         error: (err) => {
                             this.isSaving = false;
                             console.error('Error updating camera', err);
-                            this.toastService.show('Failed to update camera', 'error');
+                            this.registrationErrorMessage = err.error?.message || 'Failed to update camera';
+                            this.toastService.show(this.registrationErrorMessage, 'error');
                         }
                     });
                 } else {
@@ -589,7 +595,8 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy {
                     error: (err: any) => {
                         this.isSaving = false;
                         console.error('Error creating cameras', err);
-                        this.toastService.show('Failed to register cameras', 'error');
+                        this.registrationErrorMessage = err.error?.message || 'Failed to register cameras';
+                        this.toastService.show(this.registrationErrorMessage, 'error');
                     }
                 });
             }
@@ -657,8 +664,8 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy {
                     },
                     error: (err) => {
                         this.isSaving = false;
-                        this.toastService.show('Failed to activate cameras', 'error');
-                        this.cancelDelete();
+                        this.confirmErrorMessage = err.error?.message || 'Failed to activate cameras';
+                        this.toastService.show(this.confirmErrorMessage, 'error');
                     }
                 });
             }
@@ -683,8 +690,8 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy {
                     },
                     error: (err) => {
                         this.isSaving = false;
-                        this.toastService.show('Failed to deactivate cameras', 'error');
-                        this.cancelDelete();
+                        this.confirmErrorMessage = err.error?.message || 'Failed to deactivate cameras';
+                        this.toastService.show(this.confirmErrorMessage, 'error');
                     }
                 });
             }
@@ -709,8 +716,8 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy {
                     },
                     error: (err) => {
                         this.isSaving = false;
-                        this.toastService.show('Failed to delete cameras', 'error');
-                        this.cancelDelete();
+                        this.confirmErrorMessage = err.error?.message || 'Failed to delete cameras';
+                        this.toastService.show(this.confirmErrorMessage, 'error');
                     }
                 });
             }

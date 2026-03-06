@@ -613,6 +613,93 @@
     gap: 0.2rem;
 }
 
+.alert-error {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    animation: slideIn 0.3s ease-out;
+
+    i,
+    ::ng-deep svg {
+        width: 20px;
+        height: 20px;
+        color: #ef4444;
+        flex-shrink: 0;
+        margin-top: 0.1rem;
+    }
+
+    .alert-content {
+        flex: 1;
+
+        p {
+            color: #ef4444;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        .error-details {
+            margin-top: 0.75rem;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.75rem;
+            color: rgba(239, 68, 68, 0.8);
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid rgba(239, 68, 68, 0.1);
+
+            &::-webkit-scrollbar {
+                width: 4px;
+            }
+
+            &::-webkit-scrollbar-thumb {
+                background: rgba(239, 68, 68, 0.2);
+                border-radius: 10px;
+            }
+        }
+    }
+
+    .alert-close {
+        color: rgba(239, 68, 68, 0.5);
+        transition: var(--transition);
+        padding: 0.25rem;
+        border-radius: 6px;
+
+        &:hover {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        i,
+        ::ng-deep svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 /* Checkbox Column */
 .checkbox-col {
     width: 50px;

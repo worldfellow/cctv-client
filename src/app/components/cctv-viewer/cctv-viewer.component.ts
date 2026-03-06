@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, AfterViewInit, ViewChild, ElementRef, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, AfterViewInit, ViewChild, ElementRef, OnDestroy, ChangeDetectorRef, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CctvFeed } from '../cctv-card/cctv-card.component';
 import { CctvService } from '../../services/cctv.service';
@@ -30,6 +30,7 @@ export class CctvViewerComponent implements AfterViewInit, OnDestroy {
     isMuted: false,
     zoomScale: 1
   };
+  screenshotError: string = '';
 
   constructor(
     private cctvService: CctvService,
@@ -37,6 +38,10 @@ export class CctvViewerComponent implements AfterViewInit, OnDestroy {
     private iconService: IconService,
     private cdr: ChangeDetectorRef
   ) { }
+
+  ngOnInit(): void {
+    document.body.classList.add('modal-open');
+  }
 
   ngAfterViewInit(): void {
     this.iconService.refreshIcons();
@@ -63,6 +68,7 @@ export class CctvViewerComponent implements AfterViewInit, OnDestroy {
     if (this.player) {
       this.player.destroy();
     }
+    document.body.classList.remove('modal-open');
   }
 
   setZoom(delta: number): void {
@@ -185,11 +191,13 @@ export class CctvViewerComponent implements AfterViewInit, OnDestroy {
     this.cctvService.saveScreenshot(screenshotData).subscribe({
       next: (res) => {
         console.log('Screenshot saved successfully:', res);
+        this.screenshotError = '';
         this.toastService.show('Screenshot saved successfully!', 'success');
       },
       error: (err) => {
         console.error('Failed to save screenshot:', err);
-        this.toastService.show('Failed to save screenshot to server.', 'error');
+        this.screenshotError = err.error?.message || 'Failed to save screenshot to server. Please check connection and try again.';
+        this.toastService.show(this.screenshotError, 'error');
       }
     });
 

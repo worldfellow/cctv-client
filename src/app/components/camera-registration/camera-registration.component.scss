@@ -708,7 +708,39 @@
 .registration-form {
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 1.5rem;
+
+    .registration-error-alert {
+        margin-bottom: 1rem;
+        padding: 1rem;
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #ef4444;
+        font-size: 0.9rem;
+        animation: slideDown 0.3s ease;
+
+        lucide-icon {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+    }
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .camera-list {
