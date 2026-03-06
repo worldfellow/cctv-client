@@ -41,6 +41,9 @@ export class ScreenshotGalleryComponent implements OnInit, OnDestroy, AfterViewI
     // Selection State
     selectedScreenshotIds: Set<string> = new Set();
     isDeleting: boolean = false;
+    showDeleteConfirmModal: boolean = false;
+    showDeleteErrorModal: boolean = false;
+    deleteErrorMessage: string = '';
 
     private destroy$ = new Subject<void>();
     private filterSubject = new Subject<void>();
@@ -80,6 +83,7 @@ export class ScreenshotGalleryComponent implements OnInit, OnDestroy, AfterViewI
     }
 
     ngOnDestroy(): void {
+        this.toggleBodyClass(false); // Cleanup on navigate away
         this.destroy$.next();
         this.destroy$.complete();
     }
@@ -139,10 +143,12 @@ export class ScreenshotGalleryComponent implements OnInit, OnDestroy, AfterViewI
 
     openLightbox(screenshot: any): void {
         this.selectedScreenshot = screenshot;
+        this.toggleBodyClass(true);
     }
 
     closeLightbox(): void {
         this.selectedScreenshot = null;
+        this.toggleBodyClass(false);
     }
 
     getFullImageUrl(path: string): string {
@@ -211,24 +217,50 @@ export class ScreenshotGalleryComponent implements OnInit, OnDestroy, AfterViewI
 
     deleteSelectedParams() {
         if (this.selectedScreenshotIds.size === 0) return;
+        this.deleteErrorMessage = '';
+        this.showDeleteConfirmModal = true;
+        this.toggleBodyClass(true);
+        setTimeout(() => this.refreshIcons(), 0);
+    }
 
-        if (confirm(`Are you sure you want to delete ${this.selectedScreenshotIds.size} selected screenshot(s)?`)) {
-            this.isDeleting = true;
-            const idsToDelete = Array.from(this.selectedScreenshotIds);
+    cancelDelete() {
+        this.showDeleteConfirmModal = false;
+        this.toggleBodyClass(false);
+    }
 
-            this.cctvService.deleteScreenshots(idsToDelete).pipe(takeUntil(this.destroy$)).subscribe({
-                next: (res) => {
-                    this.isDeleting = false;
-                    this.selectedScreenshotIds = new Set();
-                    // Reload current page, or previous if current is empty
-                    this.loadScreenshots(this.currentPage);
-                },
-                error: (err) => {
-                    console.error('Failed to delete screenshots', err);
-                    this.isDeleting = false;
-                    alert('Failed to delete some or all selected screenshots.');
-                }
-            });
+    confirmDelete() {
+        this.isDeleting = true;
+        this.deleteErrorMessage = '';
+        const idsToDelete = Array.from(this.selectedScreenshotIds);
+
+        this.cctvService.deleteScreenshots(idsToDelete).pipe(takeUntil(this.destroy$)).subscribe({
+            next: (res) => {
+                this.isDeleting = false;
+                this.showDeleteConfirmModal = false;
+                this.selectedScreenshotIds = new Set();
+                this.toggleBodyClass(false);
+                this.loadScreenshots(this.currentPage);
+            },
+            error: (err) => {
+                console.error('Failed to delete screenshots', err);
+                this.isDeleting = false;
+                this.deleteErrorMessage = err.error?.message || 'Failed to delete some or all selected screenshots. Please try again.';
+                // Keep showDeleteConfirmModal = true
+                setTimeout(() => this.refreshIcons(), 0);
+            }
+        });
+    }
+
+    closeErrorModal() {
+        this.showDeleteErrorModal = false;
+        this.toggleBodyClass(false);
+    }
+
+    private toggleBodyClass(isOpen: boolean) {
+        if (isOpen) {
+            document.body.classList.add('modal-open');
+        } else {
+            document.body.classList.remove('modal-open');
         }
     }
 

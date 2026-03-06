@@ -10,6 +10,7 @@ import {
 } from 'lucide-angular';
 
 import { routes } from './app.routes';
+import { authInterceptor } from './interceptors/auth.interceptor';
 
 import { environment } from '../environments/environment';
 
@@ -24,7 +25,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
-    provideHttpClient(withInterceptorsFromDi(), withInterceptors([includeBearerTokenInterceptor])),
+    provideHttpClient(withInterceptorsFromDi(), withInterceptors([includeBearerTokenInterceptor, authInterceptor])),
     provideKeycloak({
       config: {
         url: environment.keycloak.url,

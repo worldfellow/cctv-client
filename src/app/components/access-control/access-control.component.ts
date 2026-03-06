@@ -73,16 +73,6 @@ export class AccessControlComponent implements OnInit, OnDestroy, AfterViewInit 
         const selectedMenuIds = this.currentPermissions.menus;
         let actions = this.availableActions.filter(a => selectedMenuIds.includes(a.menuId!));
 
-        // Then filter by role for bulk operations
-        if (this.selectedUserIds.size > 0) {
-            const selectedUsers = Array.from(this.selectedUsersMap.values());
-            const canDoBulk = selectedUsers.every(u => ['ADMIN', 'SUPER_ADMIN', 'OPERATOR', 'STAFF'].includes(u.role));
-
-            if (!canDoBulk) {
-                actions = actions.filter(a => !a.id.endsWith('_bulk'));
-            }
-        }
-
         return actions;
     }
 

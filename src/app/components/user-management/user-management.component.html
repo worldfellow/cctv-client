@@ -222,6 +222,12 @@
                 </button>
             </div>
 
+            <!-- Modal Error Message -->
+            <div class="modal-alert-error" *ngIf="modalErrorMessage">
+                <i data-lucide="alert-circle"></i>
+                <span>{{ modalErrorMessage }}</span>
+            </div>
+
             <form #userForm="ngForm" (ngSubmit)="saveUser()" class="user-form">
                 <div class="form-grid">
                     <div class="form-group">
@@ -418,6 +424,12 @@
                         </div>
                     </div>
 
+                    <!-- General Upload Error -->
+                    <div class="modal-alert-error" *ngIf="bulkUploadGeneralError" style="margin-top: 1rem;">
+                        <i data-lucide="alert-circle"></i>
+                        <span>{{ bulkUploadGeneralError }}</span>
+                    </div>
+
                     <!-- Error List -->
                     <div class="error-container" *ngIf="bulkUploadErrors.length > 0">
                         <div class="error-header">
@@ -470,7 +482,7 @@
 
     <!-- Confirm Dialog -->
     <app-confirm-modal [isOpen]="isConfirmModalOpen" [title]="confirmModalTitle" [message]="confirmModalMessage"
-        [confirmText]="confirmModalBtnText" [isLoading]="isSaving" (confirm)="executeConfirmAction()"
-        (cancel)="cancelConfirmAction()">
+        [confirmText]="confirmModalBtnText" [isLoading]="isSaving" [errorMessage]="confirmModalErrorMessage"
+        (confirm)="executeConfirmAction()" (cancel)="cancelConfirmAction()">
     </app-confirm-modal>
 </div>

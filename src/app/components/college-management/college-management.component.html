@@ -207,6 +207,16 @@
             </div>
 
             <form #collegeForm="ngForm" (ngSubmit)="saveCollege()" class="management-form">
+                <div class="alert-error" *ngIf="errorMessage">
+                    <i data-lucide="alert-circle"></i>
+                    <div class="alert-content">
+                        <p>{{ errorMessage }}</p>
+                    </div>
+                    <button type="button" class="alert-close" (click)="errorMessage = ''">
+                        <i data-lucide="x"></i>
+                    </button>
+                </div>
+
                 <div class="form-grid">
                     <div class="form-group full-width">
                         <label>College Name</label>
@@ -267,6 +277,14 @@
             </div>
 
             <div class="bulk-upload-content management-form" style="display: flex; gap: 1rem; flex-direction: column;">
+                <div class="alert-error" *ngIf="errorMessage">
+                    <i data-lucide="alert-circle"></i>
+                    <div class="alert-content">
+                        <p>{{ errorMessage }}</p>
+                        <pre class="error-details" *ngIf="errorDetails">{{ errorDetails }}</pre>
+                    </div>
+                </div>
+
                 <div class="step-card nested-glass form-grid" style="padding: 1rem; margin-bottom: 0;">
                     <div class="step-header full-width"
                         style="margin-bottom: 0.5rem; display: flex; align-items: center;">

@@ -238,6 +238,10 @@
             </div>
 
             <form [formGroup]="registrationForm" (ngSubmit)="onSubmit()" class="registration-form" autocomplete="off">
+                <div class="registration-error-alert" *ngIf="registrationErrorMessage">
+                    <lucide-icon name="alert-circle"></lucide-icon>
+                    <span>{{ registrationErrorMessage }}</span>
+                </div>
                 <div formArrayName="cameras" class="camera-list">
                     <div *ngFor="let camera of cameras.controls; let camIndex=index; trackBy: trackByIndex"
                         [formGroupName]="camIndex" class="device-card nested-glass">
@@ -501,6 +505,7 @@
         [title]="bulkConfirmTitle || (deviceToDelete ? 'Delete Camera Device' : 'Delete Camera Channel')"
         [message]="bulkConfirmMessage || (deviceToDelete ? 'Are you sure you want to delete this device and all its channels? (' + deviceToDelete.ipAddress + ')' : 'Are you sure you want to delete \'' + (itemToDelete?.name || 'this camera channel') + '\'? This action cannot be undone.')"
         [confirmText]="bulkConfirmBtnText || (deviceToDelete ? 'Delete Device' : 'Delete Camera')"
-        [isLoading]="isSaving" (confirm)="executeDelete()" (cancel)="cancelDelete()">
+        [isLoading]="isSaving" [errorMessage]="confirmErrorMessage" (confirm)="executeDelete()"
+        (cancel)="cancelDelete()">
     </app-confirm-modal>
 </div>

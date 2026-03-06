@@ -22,6 +22,11 @@ import { IconService } from '../../../services/icon.service';
         
         <div class="modal-body">
           <p>{{ message }}</p>
+          
+          <div class="error-alert" *ngIf="errorMessage">
+            <i data-lucide="alert-circle"></i>
+            <span>{{ errorMessage }}</span>
+          </div>
         </div>
         
         <div class="modal-footer">
@@ -115,6 +120,21 @@ import { IconService } from '../../../services/icon.service';
       line-height: 1.5;
     }
 
+    .error-alert {
+      margin-top: 16px;
+      padding: 12px;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #ef4444;
+      font-size: 0.875rem;
+
+      i { width: 16px; height: 16px; flex-shrink: 0; }
+    }
+
     .modal-footer {
       padding: 20px 24px;
       border-top: 1px solid var(--card-border);
@@ -177,6 +197,7 @@ export class ConfirmModalComponent implements OnChanges, AfterViewInit {
   @Input() message: string = 'Are you sure you want to proceed?';
   @Input() confirmText: string = 'Yes, Delete';
   @Input() isLoading: boolean = false;
+  @Input() errorMessage: string = '';
 
   @Output() confirm = new EventEmitter<void>();
   @Output() cancel = new EventEmitter<void>();
