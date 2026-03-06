@@ -205,7 +205,7 @@ export class CctvService {
     }
 
     downloadUserTemplate(): Observable<any> {
-        return this.http.get(`${this.apiUrl}/users/template`, { responseType: 'blob' });
+        return this.http.get(`${this.apiUrl}/users/template/download`, { responseType: 'blob' });
     }
 
     bulkUploadUsers(formData: FormData): Observable<any> {
@@ -257,7 +257,7 @@ export class CctvService {
     }
 
     downloadCollegeTemplate(): Observable<any> {
-        return this.http.get(`${this.apiUrl}/colleges/template`, { responseType: 'blob' });
+        return this.http.get(`${this.apiUrl}/colleges/template/download`, { responseType: 'blob' });
     }
 
     bulkUploadColleges(formData: FormData): Observable<any> {

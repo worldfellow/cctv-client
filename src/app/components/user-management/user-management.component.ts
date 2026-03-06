@@ -169,12 +169,17 @@ export class UserManagementComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   selectCollege(college: any): void {
-    this.currentUser.collegeId = college.id;
+    if (college === 'ALL') {
+      this.currentUser.collegeId = 'ALL';
+    } else {
+      this.currentUser.collegeId = college.id;
+    }
     this.showCollegeDropdown = false;
     this.collegeSearch = '';
   }
 
   get selectedCollegeName(): string {
+    if (this.currentUser.collegeId === 'ALL') return 'All Colleges';
     const college = this.colleges.find(c => c.id === this.currentUser.collegeId);
     return college ? college.name : 'Select College';
   }
@@ -458,6 +463,7 @@ export class UserManagementComponent implements OnInit, AfterViewInit, OnDestroy
         next: () => {
           this.isSaving = false;
           this.toastService.show('User created successfully', 'success');
+          this.currentPage = 1;
           this.loadUsers();
           this.loadRoles(); // Refresh roles list
           this.closeModal();
@@ -541,6 +547,7 @@ export class UserManagementComponent implements OnInit, AfterViewInit, OnDestroy
     this.isBulkUploadModalOpen = false;
     this.resetUploadState();
     if (this.uploadResults && this.uploadResults.success > 0) {
+      this.currentPage = 1;
       this.loadUsers();
     }
   }
@@ -605,6 +612,7 @@ export class UserManagementComponent implements OnInit, AfterViewInit, OnDestroy
         this.isUploading = false;
         this.uploadResults = res;
         this.toastService.show(res.message, 'success');
+        this.loadUsers();
       },
       error: (err) => {
         this.isUploading = false;
