@@ -1,11 +1,29 @@
 @use 'user-management.responsive';
 
 .user-management-container {
+    padding: 2rem;
+    min-height: 100vh;
+    background: var(--bg-main);
+}
+
+.modal-alert-error {
+    margin: 1rem 1.5rem 0;
     padding: 1rem;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 12px;
     display: flex;
-    flex-direction: column;
-    gap: 2rem;
-    animation: fadeIn 0.4s ease-out;
+    align-items: center;
+    gap: 12px;
+    color: #ef4444;
+    font-size: 0.9rem;
+    animation: fadeIn 0.3s ease;
+
+    i {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+    }
 }
 
 @keyframes fadeIn {
@@ -42,87 +60,88 @@
         display: flex;
         align-items: center;
         gap: 1rem;
-    }
 
-    .search-box {
-        position: relative;
-        width: 250px;
+        .search-box {
+            position: relative;
+            width: 250px;
 
-        i,
-        ::ng-deep svg {
-            position: absolute;
-            left: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 18px;
-            height: 18px;
-            color: var(--text-muted);
-        }
+            i,
+            ::ng-deep svg {
+                position: absolute;
+                left: 1rem;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 18px;
+                height: 18px;
+                color: var(--text-muted);
+            }
 
-        input {
-            width: 100%;
-            padding: 0.75rem 1rem 0.75rem 3rem;
-            background: var(--input-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 12px;
-            color: var(--text-main);
-            font-size: 0.9rem;
-            transition: var(--transition);
+            input {
+                width: 100%;
+                padding: 0.75rem 1rem 0.75rem 3rem;
+                background: var(--input-bg);
+                border: 1px solid var(--card-border);
+                border-radius: 12px;
+                color: var(--text-main);
+                font-size: 0.9rem;
+                transition: var(--transition);
 
-            &:focus {
-                outline: none;
-                border-color: var(--primary);
+                &:focus {
+                    outline: none;
+                    border-color: var(--primary);
+                }
             }
         }
+
+        .add-user-btn {
+            background: var(--primary);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            transition: var(--transition);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+
+            &:hover {
+                background: var(--primary-hover);
+                transform: translateY(-2px);
+                box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+            }
+
+            lucide-icon,
+            ::ng-deep svg {
+                width: 18px;
+                height: 18px;
+            }
+        }
+
+    }
+}
+
+.btn-secondary {
+    background: var(--input-bg);
+    color: var(--text-main);
+    padding: 0.75rem 1.25rem;
+    border-radius: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    transition: var(--transition);
+    border: 1px solid var(--card-border);
+
+    &:hover {
+        background: var(--card-bg);
+        transform: translateY(-2px);
     }
 
-    .add-user-btn {
-        background: var(--primary);
-        color: white;
-        padding: 0.75rem 1.5rem;
-        border-radius: 12px;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 0.6rem;
-        transition: var(--transition);
-        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-
-        &:hover {
-            background: var(--primary-hover);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
-        }
-
-        lucide-icon,
-        ::ng-deep svg {
-            width: 18px;
-            height: 18px;
-        }
-    }
-
-    .btn-secondary {
-        background: var(--input-bg);
-        color: var(--text-main);
-        padding: 0.75rem 1.25rem;
-        border-radius: 12px;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 0.6rem;
-        transition: var(--transition);
-        border: 1px solid var(--card-border);
-
-        &:hover {
-            background: var(--card-bg);
-            transform: translateY(-2px);
-        }
-
-        lucide-icon,
-        ::ng-deep svg {
-            width: 18px;
-            height: 18px;
-        }
+    lucide-icon,
+    ::ng-deep svg {
+        width: 18px;
+        height: 18px;
     }
 }
 
@@ -711,17 +730,6 @@
     display: flex;
     justify-content: flex-end;
     gap: 1rem;
-
-    .cancel-btn {
-        padding: 0.75rem 1.5rem;
-        border-radius: 10px;
-        color: var(--text-main);
-        font-weight: 600;
-
-        &:hover {
-            background: var(--input-bg);
-        }
-    }
 
     .save-btn {
         padding: 0.75rem 2rem;

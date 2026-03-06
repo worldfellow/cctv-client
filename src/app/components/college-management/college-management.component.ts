@@ -25,6 +25,8 @@ export class CollegeManagementComponent implements OnInit, AfterViewInit, OnDest
 
   isBulkUploadModalOpen: boolean = false;
   @ViewChild('fileInput') fileInput!: ElementRef;
+  errorMessage: string = '';
+  errorDetails: string = '';
 
   // Selection
   selectedCollegeIds: Set<string> = new Set();
@@ -303,6 +305,7 @@ export class CollegeManagementComponent implements OnInit, AfterViewInit, OnDest
   openCreateModal(): void {
     this.isEditing = false;
     this.currentCollege = { name: '', address: '', contactEmail: '' };
+    this.errorMessage = '';
     this.showModal = true;
     this.refreshIcons();
   }
@@ -310,20 +313,26 @@ export class CollegeManagementComponent implements OnInit, AfterViewInit, OnDest
   openEditModal(college: College): void {
     this.isEditing = true;
     this.currentCollege = { ...college };
+    this.errorMessage = '';
     this.showModal = true;
     this.refreshIcons();
   }
 
   closeModal(): void {
     this.showModal = false;
+    this.errorMessage = '';
   }
 
   openBulkUploadModal(): void {
+    this.errorMessage = '';
+    this.errorDetails = '';
     this.isBulkUploadModalOpen = true;
   }
 
   closeBulkUploadModal(): void {
     this.isBulkUploadModalOpen = false;
+    this.errorMessage = '';
+    this.errorDetails = '';
     if (this.fileInput && this.fileInput.nativeElement) {
       this.fileInput.nativeElement.value = null;
     }
@@ -370,8 +379,10 @@ export class CollegeManagementComponent implements OnInit, AfterViewInit, OnDest
         error: (err) => {
           this.isUploading = false;
           const errMsg = err.error?.message || 'Failed to upload colleges';
-          const errDetails = err.error?.errors?.join('\n') || '';
-          console.error(errMsg, errDetails);
+          const details = err.error?.errors || [];
+          this.errorMessage = errMsg;
+          this.errorDetails = details.join('\n');
+          console.error(errMsg, details);
           this.toastService.show(errMsg, 'error');
         }
       });
@@ -383,6 +394,7 @@ export class CollegeManagementComponent implements OnInit, AfterViewInit, OnDest
 
   saveCollege(): void {
     this.isSaving = true;
+    this.errorMessage = '';
 
     // Trim string inputs
     this.currentCollege.name = this.currentCollege.name?.trim();
@@ -399,9 +411,9 @@ export class CollegeManagementComponent implements OnInit, AfterViewInit, OnDest
         },
         error: (err) => {
           this.isSaving = false;
-          this.toastService.show('Update failed', 'error');
-          console.error('Update failed');
-          this.closeModal();
+          this.errorMessage = err.error?.message || 'Update failed. Please try again.';
+          this.toastService.show(this.errorMessage, 'error');
+          console.error('Update failed:', err);
         }
       });
     } else {
@@ -414,9 +426,9 @@ export class CollegeManagementComponent implements OnInit, AfterViewInit, OnDest
         },
         error: (err) => {
           this.isSaving = false;
-          this.toastService.show('Registration failed', 'error');
-          console.error('Create failed');
-          this.closeModal();
+          this.errorMessage = err.error?.message || 'Registration failed. Please try again.';
+          this.toastService.show(this.errorMessage, 'error');
+          console.error('Create failed:', err);
         }
       });
     }

@@ -109,5 +109,12 @@
                 </div>
             </div> -->
         </div>
+
+        <!-- Screenshot Error Message -->
+        <div class="screenshot-error-alert" *ngIf="screenshotError">
+            <i data-lucide="alert-circle"></i>
+            <span>{{ screenshotError }}</span>
+            <button (click)="screenshotError = ''" class="close-error">×</button>
+        </div>
     </div>
 </div>

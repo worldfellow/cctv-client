@@ -162,4 +162,30 @@
             </div>
         </div>
     </div>
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-backdrop" *ngIf="showDeleteConfirmModal" (click)="cancelDelete()">
+        <div class="modal-content glass-morphism sm" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <div class="icon-box warning">
+                    <i data-lucide="alert-triangle"></i>
+                </div>
+                <h3>Delete Screenshots</h3>
+                <p>Are you sure you want to delete <strong>{{ selectedScreenshotIds.size }}</strong> selected
+                    screenshot(s)? This action cannot be undone.</p>
+                <div class="error-alert" *ngIf="deleteErrorMessage">
+                    <i data-lucide="alert-circle"></i>
+                    <span>{{ deleteErrorMessage }}</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn cancel" (click)="cancelDelete()" [disabled]="isDeleting">Cancel</button>
+                <button class="modal-btn delete" (click)="confirmDelete()" [disabled]="isDeleting">
+                    <i *ngIf="isDeleting" data-lucide="loader-2" class="spin"></i>
+                    <i *ngIf="!isDeleting" data-lucide="trash-2"></i>
+                    <span>{{ isDeleting ? 'Deleting...' : 'Delete Now' }}</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
 </div>

@@ -1204,3 +1204,21 @@ button {
     }
   }
 }
+/* --- Global Modal & Backdrop Fixes --- */
+body.modal-open {
+  overflow: hidden !important; /* Prevent scroll */
+  
+  .sidebar, .top-nav {
+    filter: blur(8px) brightness(0.7) !important;
+    pointer-events: none !important;
+    transition: filter 0.3s ease, brightness 0.3s ease !important;
+  }
+}
+
+.modal-backdrop, .lightbox-backdrop, .viewer-overlay {
+  z-index: 9999 !important; /* Ensure it's above the sidebar (2100) */
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(0, 0, 0, 0.75) !important;
+  backdrop-filter: blur(4px) !important;
+}
