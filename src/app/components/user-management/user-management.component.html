@@ -105,7 +105,8 @@
                             <span class="role-badge">{{ user.role }}</span>
                         </td>
                         <td data-label="College">
-                            <span class="college-info">{{ user.College?.name || 'N/A' }}</span>
+                            <span class="college-info">{{ (user.allowedColleges && user.allowedColleges.includes('ALL'))
+                                ? 'All Colleges' : (user.College?.name || 'N/A') }}</span>
                         </td>
                         <td data-label="Status">
                             <label class="status-toggle"
@@ -338,6 +339,10 @@
                                         placeholder="Search college..." (click)="$event.stopPropagation()">
                                 </div>
                                 <div class="options-list">
+                                    <div class="option" (click)="selectCollege('ALL')"
+                                        [class.selected]="currentUser.collegeId === 'ALL'">
+                                        All Colleges
+                                    </div>
                                     <div class="option"
                                         *ngFor="let college of filteredColleges; trackBy: trackByCollegeId"
                                         (click)="selectCollege(college)"
