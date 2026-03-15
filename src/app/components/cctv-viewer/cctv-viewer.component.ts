@@ -142,12 +142,30 @@ export class CctvViewerComponent implements AfterViewInit, OnDestroy {
     const ctx = tempCanvas.getContext('2d');
     if (!ctx) return;
 
-    // Use actual dimensions
-    const width = source instanceof HTMLVideoElement ? source.videoWidth : source.width;
-    const height = source instanceof HTMLVideoElement ? source.videoHeight : source.height;
+    // Get source dimensions and calculate target for high-res screenshot
+    let sourceWidth = source instanceof HTMLVideoElement ? source.videoWidth : source.width;
+    let sourceHeight = source instanceof HTMLVideoElement ? source.videoHeight : source.height;
 
-    tempCanvas.width = width || 1280;
-    tempCanvas.height = height || 720;
+    // Default to HD if dimensions are missing
+    sourceWidth = sourceWidth || 1280;
+    sourceHeight = sourceHeight || 720;
+
+    // Target minimum resolution (Full HD 1920x1080)
+    const targetMinWidth = 1920;
+    const targetMinHeight = 1080;
+
+    let targetWidth = sourceWidth;
+    let targetHeight = sourceHeight;
+
+    // Upscale if below target resolution while preserving aspect ratio
+    if (sourceWidth < targetMinWidth || sourceHeight < targetMinHeight) {
+      const scale = Math.max(targetMinWidth / sourceWidth, targetMinHeight / sourceHeight);
+      targetWidth = Math.round(sourceWidth * scale);
+      targetHeight = Math.round(sourceHeight * scale);
+    }
+
+    tempCanvas.width = targetWidth;
+    tempCanvas.height = targetHeight;
 
     // Draw video frame
     ctx.drawImage(source, 0, 0, tempCanvas.width, tempCanvas.height);
@@ -158,21 +176,26 @@ export class CctvViewerComponent implements AfterViewInit, OnDestroy {
     const timeStr = now.toLocaleTimeString();
 
     // Semi-transparent overlay bar at bottom
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-    ctx.fillRect(0, tempCanvas.height - 80, tempCanvas.width, 80);
+    const barHeight = Math.max(80, tempCanvas.height * 0.12);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(0, tempCanvas.height - barHeight, tempCanvas.width, barHeight);
 
-    // Text configuration
+    // Responsive Text configuration
+    const fontSize = Math.max(16, Math.floor(tempCanvas.width * 0.022)); // Proportional font size
     ctx.fillStyle = 'white';
-    ctx.font = 'bold 24px Arial';
-    ctx.textAlign = 'left';
+    ctx.font = `bold ${fontSize}px Arial`;
 
     const padding = 20;
-    const line2Y = tempCanvas.height - 20;
-    const line1Y = tempCanvas.height - 50;
+    const spacing = fontSize * 1.4; // Better line spacing
+    const line2Y = tempCanvas.height - (barHeight * 0.25);
+    const line1Y = line2Y - spacing;
 
+    // Left Aligned Info
+    ctx.textAlign = 'left';
     ctx.fillText(`${dateStr} ${timeStr}`, padding, line1Y);
     ctx.fillText(`College: ${this.collegeName || 'N/A'}`, padding, line2Y);
 
+    // Right Aligned Info
     ctx.textAlign = 'right';
     ctx.fillText(`Camera: ${this.feed.name}`, tempCanvas.width - padding, line1Y);
     ctx.fillText(`Location: ${this.feed.location}`, tempCanvas.width - padding, line2Y);
