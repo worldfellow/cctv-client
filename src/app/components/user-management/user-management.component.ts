@@ -135,7 +135,7 @@ export class UserManagementComponent implements OnInit, AfterViewInit, OnDestroy
         console.error('Error loading roles:', err);
         this.roles = [
           { roleId: 'STAFF', roleName: 'STAFF' },
-          { roleId: 'SUPER_ADMIN', roleName: 'SUPER_ADMIN' }
+          // { roleId: 'SUPER_ADMIN', roleName: 'SUPER_ADMIN' }
         ];
       }
     });
