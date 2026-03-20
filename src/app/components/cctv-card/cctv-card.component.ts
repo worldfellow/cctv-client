@@ -36,7 +36,7 @@ export class CctvCardComponent implements OnInit, AfterViewInit, OnDestroy {
   ngAfterViewInit(): void {
     this.iconService.refreshIcons();
     if (this.feed.wsUrl && this.feed.status === 'online') {
-      this.initPlayer();
+      setTimeout(() => this.initPlayer(), 500);
     }
   }
 
