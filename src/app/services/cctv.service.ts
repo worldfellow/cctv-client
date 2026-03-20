@@ -50,11 +50,14 @@ export interface Role {
 
 export interface CctvFeed {
     id: string;
-    collegeId: string;
-    cameraName: string;
+    collegeId?: string;
+    cameraName?: string;
+    name?: string;
     location: string;
-    streamUrl: string;
-    status: 'ONLINE' | 'OFFLINE';
+    streamUrl?: string;
+    wsUrl?: string;
+    status: 'online' | 'offline' | 'ONLINE' | 'OFFLINE';
+    thumbnail?: string;
     College?: {
         name: string;
     };
@@ -100,6 +103,15 @@ export class CctvService {
             formatted.logoUrl = baseUrl + formatted.logoUrl;
         }
         return formatted;
+    }
+
+    private formatWsUrl(url: string | undefined): string | undefined {
+        if (!url) return url;
+        // Fix Mixed Content: if page is HTTPS, force WSS
+        if (window.location.protocol === 'https:' && url.startsWith('ws:')) {
+            return url.replace('ws:', 'wss:');
+        }
+        return url;
     }
 
     private loadSystemConfig(): void {
@@ -319,7 +331,17 @@ export class CctvService {
     // Dashboard
     getDashboardFeeds(collegeId: string, page: number = 1, limit: number = 10): Observable<PaginatedResponse<CctvFeed>> {
         const params: any = { page: page.toString(), limit: limit.toString(), collegeId };
-        return this.http.get<PaginatedResponse<CctvFeed>>(`${this.apiUrl}/dashboard`, { params });
+        return this.http.get<PaginatedResponse<CctvFeed>>(`${this.apiUrl}/dashboard`, { params }).pipe(
+            map(response => {
+                if (response.data) {
+                    response.data = response.data.map(feed => ({
+                        ...feed,
+                        wsUrl: this.formatWsUrl(feed.wsUrl)
+                    }));
+                }
+                return response;
+            })
+        );
     }
 
     getDashboardStats(collegeId: string): Observable<{ total: number; active: number; offline: number }> {
@@ -347,6 +369,11 @@ export class CctvService {
         return this.http.post<{ message: string; wsUrl: string }>(`${this.apiUrl}/cameras/${id}/start-stream`, {}, {
             params: { quality },
             ...this.getHeaders()
-        });
+        }).pipe(
+            map(response => ({
+                ...response,
+                wsUrl: this.formatWsUrl(response.wsUrl) || ''
+            }))
+        );
     }
 }
