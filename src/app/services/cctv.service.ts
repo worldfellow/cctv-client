@@ -96,7 +96,7 @@ export class CctvService {
         if (!config) return config;
         const formatted = { ...config };
         if (formatted.logoUrl && formatted.logoUrl.startsWith('/uploads')) {
-            const baseUrl = this.apiUrl.replace('/api', '');
+            const baseUrl = this.apiUrl;
             formatted.logoUrl = baseUrl + formatted.logoUrl;
         }
         return formatted;

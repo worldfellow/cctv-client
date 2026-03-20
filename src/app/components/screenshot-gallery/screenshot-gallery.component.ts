@@ -35,7 +35,7 @@ export class ScreenshotGalleryComponent implements OnInit, OnDestroy, AfterViewI
 
     colleges: any[] = [];
     selectedScreenshot: any | null = null;
-    serverBaseUrl: string = environment.apiUrl.replace('/api', '');
+    serverBaseUrl: string = environment.apiUrl;
     protected Math = Math;
 
     // Selection State
