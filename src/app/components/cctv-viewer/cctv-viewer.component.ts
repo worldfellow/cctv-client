@@ -23,7 +23,6 @@ export class CctvViewerComponent implements AfterViewInit, OnDestroy {
   @ViewChild('video') videoElement!: ElementRef<HTMLVideoElement>;
 
   player: any;
-  currentQuality: 'high' | 'low' = 'high';
 
   controls = {
     isRecording: true,
@@ -59,6 +58,7 @@ export class CctvViewerComponent implements AfterViewInit, OnDestroy {
         canvas: this.canvas.nativeElement,
         autoplay: true,
         audio: false,
+        disableGl: true, // Force 2D renderer so the frame is preserved for screenshots
         loop: true
       });
     }
@@ -82,22 +82,6 @@ export class CctvViewerComponent implements AfterViewInit, OnDestroy {
     this.controls.zoomScale = 1;
   }
 
-  toggleQuality(): void {
-    const nextQuality = this.currentQuality === 'high' ? 'low' : 'high';
-    this.cctvService.startCameraStream(this.feed.id, nextQuality).subscribe({
-      next: (res) => {
-        this.currentQuality = nextQuality;
-        this.feed.wsUrl = res.wsUrl;
-        this.initPlayer();
-        this.toastService.show(`Switched to ${nextQuality === 'high' ? 'HD' : 'SD'} quality`, 'success');
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        console.error('Failed to switch quality:', err);
-        this.toastService.show('Failed to switch quality', 'error');
-      }
-    });
-  }
 
   onClose(): void {
     this.close.emit();
@@ -166,8 +150,13 @@ export class CctvViewerComponent implements AfterViewInit, OnDestroy {
 
     tempCanvas.width = targetWidth;
     tempCanvas.height = targetHeight;
+    
+    // FILL BLACK first to avoid transparent backgrounds
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
 
     // Draw video frame
+    // Draw video frame - capture directly from source canvas
     ctx.drawImage(source, 0, 0, tempCanvas.width, tempCanvas.height);
 
     // Overlay Metadata
