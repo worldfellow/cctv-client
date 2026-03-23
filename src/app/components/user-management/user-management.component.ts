@@ -441,8 +441,8 @@ export class UserManagementComponent implements OnInit, AfterViewInit, OnDestroy
     this.currentUser.email = this.currentUser.email?.trim();
     this.currentUser.mobileNo = this.currentUser.mobileNo?.trim();
 
-    if (this.isEditing && this.currentUser.keycloakId) {
-      this.cctvService.updateUser(this.currentUser.keycloakId, this.currentUser).subscribe({
+    if (this.isEditing && this.currentUser.id) {
+      this.cctvService.updateUser(this.currentUser.id, this.currentUser).subscribe({
         next: () => {
           this.isSaving = false;
           this.toastService.show('User updated successfully', 'success');
