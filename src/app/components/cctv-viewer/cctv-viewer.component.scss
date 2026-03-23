@@ -103,6 +103,24 @@
         align-items: center;
         justify-content: center;
 
+        &.is-zoomed {
+            cursor: grab;
+            user-select: none;
+            
+            img, video, canvas {
+                pointer-events: none; // Prevent default drag behaviors on inner elements
+            }
+        }
+
+        &.is-dragging {
+            cursor: grabbing;
+            
+            .video-feed {
+                transition: none !important;
+            }
+        }
+
+
         .screenshot-error-alert {
             position: absolute;
             bottom: 20px;
@@ -254,36 +272,11 @@
     left: 1.5rem;
     right: 1.5rem;
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     pointer-events: none;
     z-index: 10;
 
-    .overlay-left {
-        display: flex;
-        gap: 0.75rem;
-        align-items: center;
-        pointer-events: auto; // Allow interaction
-    }
 
-    .rec-indicator {
-        background: rgba(239, 68, 68, 0.8);
-        color: white;
-        padding: 0.4rem 0.8rem;
-        border-radius: 8px;
-        font-weight: 700;
-        font-size: 0.75rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-
-        .rec-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: white;
-            animation: pulse 1.5s infinite;
-        }
-    }
 
     .quality-badge {
         background: rgba(255, 255, 255, 0.1);
@@ -395,6 +388,17 @@
             }
         }
 
+        &.mini {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+
+            i {
+                width: 16px;
+                height: 16px;
+            }
+        }
+
         i {
             width: 20px;
             height: 20px;
@@ -427,5 +431,16 @@
         &:hover {
             background: rgba(255, 255, 255, 0.2);
         }
+    }
+
+    .zoom-hint {
+        color: white;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        padding: 0.4rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        animation: fadeIn 0.3s ease-out;
     }
 }
