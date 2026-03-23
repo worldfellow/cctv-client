@@ -21,13 +21,18 @@ export class CctvViewerComponent implements AfterViewInit, OnDestroy {
   @Output() close = new EventEmitter<void>();
   @ViewChild('canvas') canvas!: ElementRef<HTMLCanvasElement>;
   @ViewChild('video') videoElement!: ElementRef<HTMLVideoElement>;
+  @ViewChild('videoWrapper') videoWrapper!: ElementRef<HTMLDivElement>;
 
   player: any;
 
   controls = {
-    isRecording: true,
     isMuted: false,
-    zoomScale: 1
+    zoomScale: 1,
+    panX: 0,
+    panY: 0,
+    isDragging: false,
+    lastMouseX: 0,
+    lastMouseY: 0
   };
   screenshotError: string = '';
 
@@ -75,11 +80,65 @@ export class CctvViewerComponent implements AfterViewInit, OnDestroy {
     const newZoom = this.controls.zoomScale + delta;
     if (newZoom >= 1 && newZoom <= 3) {
       this.controls.zoomScale = parseFloat(newZoom.toFixed(1));
+      
+      // Reset pan if zoomed out to 1
+      if (this.controls.zoomScale <= 1) {
+        this.controls.panX = 0;
+        this.controls.panY = 0;
+      }
     }
   }
 
   resetZoom(): void {
     this.controls.zoomScale = 1;
+    this.controls.panX = 0;
+    this.controls.panY = 0;
+  }
+
+  startDragging(event: MouseEvent): void {
+    if (this.controls.zoomScale > 1) {
+      this.controls.isDragging = true;
+      this.controls.lastMouseX = event.clientX;
+      this.controls.lastMouseY = event.clientY;
+      event.preventDefault();
+    }
+  }
+
+  drag(event: MouseEvent): void {
+    if (this.controls.isDragging) {
+      const deltaX = event.clientX - this.controls.lastMouseX;
+      const deltaY = event.clientY - this.controls.lastMouseY;
+
+      this.controls.panX = this.clampPan(this.controls.panX + deltaX, 'x');
+      this.controls.panY = this.clampPan(this.controls.panY + deltaY, 'y');
+
+      this.controls.lastMouseX = event.clientX;
+      this.controls.lastMouseY = event.clientY;
+    }
+  }
+
+  stopDragging(): void {
+    this.controls.isDragging = false;
+  }
+
+  pan(dx: number, dy: number): void {
+    this.controls.panX = this.clampPan(this.controls.panX + dx, 'x');
+    this.controls.panY = this.clampPan(this.controls.panY + dy, 'y');
+  }
+
+  private clampPan(value: number, axis: 'x' | 'y'): number {
+    const s = this.controls.zoomScale;
+    if (s <= 1) return 0;
+
+    const wrapper = this.videoWrapper?.nativeElement;
+    if (!wrapper) return value;
+
+    // Rough limit calculation based on scale
+    // We allow panning up to the edge of the screen + a bit more for perspective
+    const dim = axis === 'x' ? wrapper.clientWidth : wrapper.clientHeight;
+    const limit = (dim * (s - 1)) / 1.8; // Allow slightly more than edge for better feel
+    
+    return Math.max(-limit, Math.min(limit, value));
   }
 
 
@@ -100,9 +159,6 @@ export class CctvViewerComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  toggleRecording(): void {
-    this.controls.isRecording = !this.controls.isRecording;
-  }
 
   toggleMute(): void {
     this.controls.isMuted = !this.controls.isMuted;

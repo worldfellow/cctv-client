@@ -11,27 +11,28 @@
         </header>
 
         <div class="video-section">
-            <div class="video-wrapper">
+            <div #videoWrapper class="video-wrapper" 
+                (mousedown)="startDragging($event)" 
+                (mousemove)="drag($event)" 
+                (mouseup)="stopDragging()"
+                (mouseleave)="stopDragging()"
+                [class.is-zoomed]="controls.zoomScale > 1"
+                [class.is-dragging]="controls.isDragging">
                 <ng-container *ngIf="feed.wsUrl && feed.status === 'online'; else otherFeeds">
-                    <canvas #canvas class="video-feed" [style.transform]="'scale(' + controls.zoomScale + ')'"></canvas>
+                    <canvas #canvas class="video-feed" 
+                        [style.transform]="'scale(' + controls.zoomScale + ') translate(' + controls.panX/controls.zoomScale + 'px, ' + controls.panY/controls.zoomScale + 'px)'"></canvas>
                 </ng-container>
                 <ng-template #otherFeeds>
                     <video #video *ngIf="feed.streamUrl; else useThumbnail" [src]="feed.streamUrl"
                         [poster]="feed.thumbnail" class="video-feed" autoplay muted controls
-                        [style.transform]="'scale(' + controls.zoomScale + ')'"></video>
+                        [style.transform]="'scale(' + controls.zoomScale + ') translate(' + controls.panX/controls.zoomScale + 'px, ' + controls.panY/controls.zoomScale + 'px)'"></video>
                     <ng-template #useThumbnail>
                         <img [src]="feed.thumbnail" class="video-feed" alt="Live Feed"
-                            [style.transform]="'scale(' + controls.zoomScale + ')'">
+                            [style.transform]="'scale(' + controls.zoomScale + ') translate(' + controls.panX/controls.zoomScale + 'px, ' + controls.panY/controls.zoomScale + 'px)'">
                     </ng-template>
                 </ng-template>
 
                 <div class="video-overlay-top">
-                    <div class="overlay-left">
-                        <div class="rec-indicator" *ngIf="controls.isRecording">
-                            <span class="rec-dot"></span>
-                            REC
-                        </div>
-                    </div>
                     <div class="timestamp">
                         {{ '2026-02-18 11:54:22' }} <!-- Simulated live timestamp -->
                     </div>
@@ -44,10 +45,29 @@
                             <i data-lucide="zoom-out"></i>
                         </button>
                         <div class="zoom-level" (click)="resetZoom()">{{ (controls.zoomScale * 100).toFixed(0) }}%</div>
-                        <button class="control-btn" (click)="setZoom(0.2)" title="Zoom In"
+                        <button class="control-btn" (click)="$event.stopPropagation(); setZoom(0.2)" title="Zoom In"
                             [disabled]="controls.zoomScale >= 3">
                             <i data-lucide="zoom-in"></i>
                         </button>
+                    </div>
+
+                    <div class="control-group pan-controls" *ngIf="controls.zoomScale > 1">
+                        <button class="control-btn mini" (click)="$event.stopPropagation(); pan(0, 50)" title="Move Up">
+                            <i data-lucide="chevron-up"></i>
+                        </button>
+                        <button class="control-btn mini" (click)="$event.stopPropagation(); pan(0, -50)" title="Move Down">
+                            <i data-lucide="chevron-down"></i>
+                        </button>
+                        <button class="control-btn mini" (click)="$event.stopPropagation(); pan(50, 0)" title="Move Left">
+                            <i data-lucide="chevron-left"></i>
+                        </button>
+                        <button class="control-btn mini" (click)="$event.stopPropagation(); pan(-50, 0)" title="Move Right">
+                            <i data-lucide="chevron-right"></i>
+                        </button>
+                    </div>
+
+                    <div class="zoom-hint" *ngIf="controls.zoomScale > 1">
+                        Drag to move
                     </div>
 
                     <div class="control-group">
