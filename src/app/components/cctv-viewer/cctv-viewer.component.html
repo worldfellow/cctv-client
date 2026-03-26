@@ -18,7 +18,14 @@
                 (mouseleave)="stopDragging()"
                 [class.is-zoomed]="controls.zoomScale > 1"
                 [class.is-dragging]="controls.isDragging">
-                <ng-container *ngIf="feed.wsUrl && feed.status === 'online'; else otherFeeds">
+                
+                <!-- Loading Quality Indicator -->
+                <div class="quality-loader" *ngIf="loadingQuality">
+                    <div class="spinner"></div>
+                    <span>Switching Quality...</span>
+                </div>
+
+                <ng-container *ngIf="activeWsUrl && feed.status === 'online'; else otherFeeds">
                     <canvas #canvas class="video-feed" 
                         [style.transform]="'scale(' + controls.zoomScale + ') translate(' + controls.panX/controls.zoomScale + 'px, ' + controls.panY/controls.zoomScale + 'px)'"></canvas>
                 </ng-container>
@@ -76,6 +83,12 @@
                         </button>
                         <button class="control-btn" (click)="captureScreenshot()" title="Screenshot"><i
                                 data-lucide="camera"></i></button>
+                    </div>
+
+                    <!-- Quality Selector -->
+                    <div class="control-group quality-selector">
+                        <button class="quality-btn" [class.active]="currentQuality === 'high'" (click)="changeQuality('high')">HD</button>
+                        <button class="quality-btn" [class.active]="currentQuality === 'ultra'" (click)="changeQuality('ultra')">ULTRA HD</button>
                     </div>
                 </div>
             </div>
