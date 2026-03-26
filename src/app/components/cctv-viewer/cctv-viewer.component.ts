@@ -24,6 +24,9 @@ export class CctvViewerComponent implements AfterViewInit, OnDestroy {
   @ViewChild('videoWrapper') videoWrapper!: ElementRef<HTMLDivElement>;
 
   player: any;
+  activeWsUrl: string = '';
+  currentQuality: string = 'high';
+  loadingQuality: boolean = false;
 
   controls = {
     isMuted: false,
@@ -45,21 +48,60 @@ export class CctvViewerComponent implements AfterViewInit, OnDestroy {
 
   ngOnInit(): void {
     document.body.classList.add('modal-open');
+    
+    // Fallback to dashboard URL immediately so we show something while upgrading
+    if (this.feed.wsUrl) {
+      this.activeWsUrl = this.feed.wsUrl;
+    }
+
+    // Start upgrading to HD quality immediately
+    this.changeQuality('high');
   }
 
   ngAfterViewInit(): void {
     this.iconService.refreshIcons();
-    if (this.feed.wsUrl && this.feed.status === 'online') {
-      this.initPlayer();
-    }
+    // Use a small delay to ensure canvas is fully rendered and accessible
+    setTimeout(() => {
+      if (this.activeWsUrl && this.feed.status === 'online') {
+        this.initPlayer();
+      }
+    }, 100);
+  }
+
+  changeQuality(quality: string): void {
+    if (this.loadingQuality || (this.currentQuality === quality && this.activeWsUrl)) return;
+    
+    this.loadingQuality = true;
+    this.currentQuality = quality;
+
+    this.cctvService.startCameraStream(this.feed.id, quality as 'high' | 'low').subscribe({
+      next: (res) => {
+        this.activeWsUrl = res.wsUrl;
+        this.initPlayer();
+        this.loadingQuality = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Failed to change quality:', err);
+        this.toastService.show('Failed to load ' + quality + ' quality stream', 'error');
+        this.loadingQuality = false;
+        
+        // Fallback to original if we don't have a wsUrl yet
+        if (!this.activeWsUrl) {
+           this.activeWsUrl = this.feed.wsUrl || '';
+           this.initPlayer();
+        }
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   initPlayer(): void {
-    if (typeof JSMpeg !== 'undefined' && this.canvas) {
+    if (typeof JSMpeg !== 'undefined' && this.canvas && this.activeWsUrl) {
       if (this.player) {
         this.player.destroy();
       }
-      this.player = new JSMpeg.Player(this.feed.wsUrl, {
+      this.player = new JSMpeg.Player(this.activeWsUrl, {
         canvas: this.canvas.nativeElement,
         autoplay: true,
         audio: false,
