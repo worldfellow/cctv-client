@@ -48,7 +48,7 @@ export class CctvViewerComponent implements AfterViewInit, OnDestroy {
 
   ngOnInit(): void {
     document.body.classList.add('modal-open');
-    
+
     // Fallback to dashboard URL immediately so we show something while upgrading
     if (this.feed.wsUrl) {
       this.activeWsUrl = this.feed.wsUrl;
@@ -70,7 +70,7 @@ export class CctvViewerComponent implements AfterViewInit, OnDestroy {
 
   changeQuality(quality: string): void {
     if (this.loadingQuality || (this.currentQuality === quality && this.activeWsUrl)) return;
-    
+
     this.loadingQuality = true;
     this.currentQuality = quality;
 
@@ -85,11 +85,11 @@ export class CctvViewerComponent implements AfterViewInit, OnDestroy {
         console.error('Failed to change quality:', err);
         this.toastService.show('Failed to load ' + quality + ' quality stream', 'error');
         this.loadingQuality = false;
-        
+
         // Fallback to original if we don't have a wsUrl yet
         if (!this.activeWsUrl) {
-           this.activeWsUrl = this.feed.wsUrl || '';
-           this.initPlayer();
+          this.activeWsUrl = this.feed.wsUrl || '';
+          this.initPlayer();
         }
         this.cdr.detectChanges();
       }
@@ -122,7 +122,7 @@ export class CctvViewerComponent implements AfterViewInit, OnDestroy {
     const newZoom = this.controls.zoomScale + delta;
     if (newZoom >= 1 && newZoom <= 3) {
       this.controls.zoomScale = parseFloat(newZoom.toFixed(1));
-      
+
       // Reset pan if zoomed out to 1
       if (this.controls.zoomScale <= 1) {
         this.controls.panX = 0;
@@ -179,7 +179,7 @@ export class CctvViewerComponent implements AfterViewInit, OnDestroy {
     // We allow panning up to the edge of the screen + a bit more for perspective
     const dim = axis === 'x' ? wrapper.clientWidth : wrapper.clientHeight;
     const limit = (dim * (s - 1)) / 1.8; // Allow slightly more than edge for better feel
-    
+
     return Math.max(-limit, Math.min(limit, value));
   }
 
@@ -220,6 +220,7 @@ export class CctvViewerComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
+
     const tempCanvas = document.createElement('canvas');
     const ctx = tempCanvas.getContext('2d');
     if (!ctx) return;
@@ -248,7 +249,7 @@ export class CctvViewerComponent implements AfterViewInit, OnDestroy {
 
     tempCanvas.width = targetWidth;
     tempCanvas.height = targetHeight;
-    
+
     // FILL BLACK first to avoid transparent backgrounds
     ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
