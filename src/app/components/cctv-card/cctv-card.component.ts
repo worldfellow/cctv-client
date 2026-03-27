@@ -28,32 +28,58 @@ export class CctvCardComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('canvas') canvas!: ElementRef<HTMLCanvasElement>;
 
   player: any;
+  private observer: IntersectionObserver | null = null;
 
-  constructor(private iconService: IconService) { }
+  constructor(private iconService: IconService, private elementRef: ElementRef) { }
 
   ngOnInit(): void { }
 
   ngAfterViewInit(): void {
     this.iconService.refreshIcons();
+    this.setupIntersectionObserver();
+  }
+
+  private setupIntersectionObserver(): void {
     if (this.feed.wsUrl && this.feed.status === 'online') {
-      setTimeout(() => this.initPlayer(), 500);
+      this.observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            this.initPlayer();
+          } else {
+            this.stopPlayer();
+          }
+        });
+      }, { threshold: 0.1 });
+      
+      this.observer.observe(this.elementRef.nativeElement);
     }
   }
 
   initPlayer(): void {
-    if (typeof JSMpeg !== 'undefined' && this.canvas) {
+    if (typeof JSMpeg !== 'undefined' && this.canvas && !this.player) {
       this.player = new JSMpeg.Player(this.feed.wsUrl, {
         canvas: this.canvas.nativeElement,
         autoplay: true,
-        audio: false, // Dashboard cards are muted by default
+        audio: false,
+        disableGl: false, // Performance
+        videoBufferSize: 512 * 1024, // Dashboard cards are small
+        throttled: false,
         loop: true
       });
     }
   }
 
-  ngOnDestroy(): void {
+  stopPlayer(): void {
     if (this.player) {
       this.player.destroy();
+      this.player = null;
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.stopPlayer();
+    if (this.observer) {
+      this.observer.disconnect();
     }
   }
 
