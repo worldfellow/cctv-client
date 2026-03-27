@@ -105,7 +105,11 @@ export class CctvViewerComponent implements AfterViewInit, OnDestroy {
         canvas: this.canvas.nativeElement,
         autoplay: true,
         audio: false,
-        disableGl: true, // Force 2D renderer so the frame is preserved for screenshots
+        disableGl: false, // Use WebGL for significantly better performance
+        preserveDrawingBuffer: true, // Required for screenshots with WebGL
+        videoBufferSize: 2 * 1024 * 1024, // Optimized for HD streams
+        throttled: false, // Don't throttle - process data immediately to avoid lag
+        chunkSize: 512 * 1024, // Process large chunks for smoother playback
         loop: true
       });
     }
