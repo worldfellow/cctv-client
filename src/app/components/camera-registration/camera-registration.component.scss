@@ -206,9 +206,66 @@
             color: var(--text-main);
         }
 
+        .user-credentials {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
         .user-text {
             font-size: 0.8rem;
             color: var(--text-muted);
+        }
+
+        .password-toggle-inline {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+
+            .pass-label {
+                font-weight: 500;
+                opacity: 0.7;
+            }
+
+            .pass-value {
+                font-family: monospace;
+                letter-spacing: 1px;
+                color: var(--text-main);
+                transition: all 0.2s ease;
+
+                &.blurred {
+                    filter: blur(0);
+                    opacity: 0.5;
+                }
+            }
+
+            .inline-toggle-btn {
+                background: transparent;
+                border: none;
+                color: var(--primary);
+                padding: 2px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                opacity: 0.6;
+                transition: all 0.2s ease;
+                border-radius: 4px;
+
+                &:hover {
+                    opacity: 1;
+                    background: rgba(99, 102, 241, 0.1);
+                    transform: scale(1.1);
+                }
+
+                lucide-icon,
+                ::ng-deep svg {
+                    width: 14px;
+                    height: 14px;
+                }
+            }
         }
     }
 }
@@ -843,6 +900,35 @@
                 outline: none;
                 border-color: var(--primary);
                 box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+            }
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 0.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            width: 34px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+
+            &:hover {
+                background: rgba(255, 255, 255, 0.05);
+                color: var(--primary);
+            }
+
+            lucide-icon,
+            ::ng-deep svg {
+                width: 18px;
+                height: 18px;
             }
         }
 

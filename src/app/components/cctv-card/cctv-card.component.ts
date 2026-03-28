@@ -2,6 +2,8 @@ import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ElementRef, 
 import { CommonModule } from '@angular/common';
 
 import { IconService } from '../../services/icon.service';
+import { CctvService } from '../../services/cctv.service';
+import { ToastService } from '../../services/toast.service';
 
 declare var JSMpeg: any;
 
@@ -28,32 +30,21 @@ export class CctvCardComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('canvas') canvas!: ElementRef<HTMLCanvasElement>;
 
   player: any;
-  private observer: IntersectionObserver | null = null;
 
-  constructor(private iconService: IconService, private elementRef: ElementRef) { }
+  constructor(
+    private iconService: IconService, 
+    private elementRef: ElementRef, 
+    private cctvService: CctvService,
+    private toastService: ToastService
+  ) { }
 
   ngOnInit(): void { }
 
   ngAfterViewInit(): void {
     this.iconService.refreshIcons();
-    this.setupIntersectionObserver();
+    this.initPlayer();
   }
 
-  private setupIntersectionObserver(): void {
-    if (this.feed.wsUrl && this.feed.status === 'online') {
-      this.observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            this.initPlayer();
-          } else {
-            this.stopPlayer();
-          }
-        });
-      }, { threshold: 0.1 });
-      
-      this.observer.observe(this.elementRef.nativeElement);
-    }
-  }
 
   initPlayer(): void {
     if (typeof JSMpeg !== 'undefined' && this.canvas && !this.player) {
@@ -78,12 +69,34 @@ export class CctvCardComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.stopPlayer();
-    if (this.observer) {
-      this.observer.disconnect();
-    }
   }
 
   onClick(): void {
     this.viewDetail.emit(this.feed);
+  }
+
+  onRestart(event: MouseEvent): void {
+    event.stopPropagation();
+    if (!this.feed.id) return;
+
+    this.toastService.show('Restarting stream...', 'info');
+    
+    this.cctvService.restartDashboardStream(this.feed.id).subscribe({
+      next: (res) => {
+        if (res && res.wsUrl) {
+          this.feed.wsUrl = res.wsUrl;
+        }
+        this.stopPlayer();
+        this.toastService.show('Stream restart initiated', 'success');
+        setTimeout(() => {
+          this.initPlayer();
+          this.iconService.refreshIcons();
+        }, 1500);
+      },
+      error: (err) => {
+        console.error('Failed to restart stream:', err);
+        this.toastService.show('Failed to restart stream', 'error');
+      }
+    });
   }
 }

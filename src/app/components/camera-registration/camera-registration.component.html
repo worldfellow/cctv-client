@@ -131,7 +131,16 @@
                                 </div>
                                 <div class="device-info">
                                     <span class="ip-text">{{ record.ipAddress }}</span>
-                                    <span class="user-text">Port: {{ record.rtspPort }}</span>
+                                    <div class="user-credentials">
+                                        <span class="user-text">Port: {{ record.rtspPort }} | User: {{ record.username || 'N/A' }}</span>
+                                        <div class="password-toggle-inline" *ngIf="record.id">
+                                            <span class="pass-label">Pass:</span>
+                                            <span class="pass-value" [class.blurred]="!visibleTablePasswords.has(record.id)">{{ visibleTablePasswords.has(record.id) ? record.password : '••••••••' }}</span>
+                                            <button type="button" class="inline-toggle-btn" (click)="toggleTablePassword(record.id!)" title="Toggle Password Visibility">
+                                                <lucide-icon [name]="visibleTablePasswords.has(record.id!) ? 'eye-off' : 'eye'"></lucide-icon>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </td>
@@ -343,8 +352,11 @@
                                         current)</span></label>
                                 <div class="input-wrapper">
                                     <lucide-icon name="lock" class="input-icon"></lucide-icon>
-                                    <input type="password" formControlName="password" placeholder="••••••••"
+                                    <input [type]="showPasswords[camIndex] ? 'text' : 'password'" formControlName="password" placeholder="••••••••"
                                         autocomplete="new-password">
+                                    <button type="button" class="toggle-password" (click)="togglePasswordVisibility(camIndex)" title="Toggle visibility">
+                                        <lucide-icon [name]="showPasswords[camIndex] ? 'eye-off' : 'eye'"></lucide-icon>
+                                    </button>
                                 </div>
                                 <div class="validation-error"
                                     *ngIf="camera.get('password')?.invalid && (camera.get('password')?.dirty || camera.get('password')?.touched)">

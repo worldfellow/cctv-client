@@ -38,9 +38,10 @@ export class IconService {
                         const pendingIcons = document.querySelectorAll('i[data-lucide]');
                         pendingIcons.forEach(icon => {
                             const parent = icon.parentElement;
-                            const iconName = icon.getAttribute('data-lucide');
-                            if (parent && iconName) {
-                                parent.querySelectorAll(`svg.lucide-${iconName}`).forEach(svg => svg.remove());
+                            if (parent) {
+                                // Remove ALL lucide SVGs from the parent to prevent duplicates
+                                // when toggling between two different icon names (e.g., eye/eye-off)
+                                parent.querySelectorAll('svg.lucide').forEach(svg => svg.remove());
                             }
                         });
 

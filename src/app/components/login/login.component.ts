@@ -42,6 +42,18 @@ export class LoginComponent implements OnInit, AfterViewInit {
   };
   changePasswordError = '';
   isChangingPassword = false;
+  
+  // Password visibility states
+  showPassword = false;
+  showNewPassword = false;
+  showConfirmPassword = false;
+
+  togglePasswordVisibility(field: 'login' | 'new' | 'confirm'): void {
+    if (field === 'login') this.showPassword = !this.showPassword;
+    if (field === 'new') this.showNewPassword = !this.showNewPassword;
+    if (field === 'confirm') this.showConfirmPassword = !this.showConfirmPassword;
+    this.refreshIcons();
+  }
 
   async ngOnInit(): Promise<void> {
     // If already authenticated, check password status before going to dashboard
