@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef, HostListener, OnDestroy } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, HostListener, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CctvService, College } from '../../services/cctv.service';
@@ -6,7 +6,7 @@ import { ToastService } from '../../services/toast.service';
 import { ConfirmModalComponent } from '../shared/confirm-modal/confirm-modal.component';
 import { IconService } from '../../services/icon.service';
 import { forkJoin, Subject } from 'rxjs';
-import { LucideAngularModule, Filter, FolderUp, Plus, Video, Radio, Edit3, Trash2, CameraOff, X, Building2, Network, Plug, User, Lock, PlusCircle, Save, Download, UploadCloud, CheckSquare, CheckCircle, XCircle, FileText, Loader2, ChevronDown, Search, ChevronLeft, ChevronRight } from 'lucide-angular';
+import { LucideAngularModule, Filter, FolderUp, Plus, Video, Radio, Edit3, Trash2, CameraOff, X, Building2, Network, Plug, User, Lock, PlusCircle, Save, Download, UploadCloud, CheckSquare, CheckCircle, XCircle, FileText, Loader2, ChevronDown, Search, ChevronLeft, ChevronRight, Eye, EyeOff } from 'lucide-angular';
 
 // Flat record from server
 export interface CameraRecord {
@@ -21,6 +21,8 @@ export interface CameraRecord {
     status?: string;
     collegeName?: string;
     streamUrl?: string;
+    username?: string;
+    password?: string;
 }
 
 // Grouped device for table display
@@ -47,7 +49,7 @@ export interface CameraDevice {
     templateUrl: './camera-registration.component.html',
     styleUrl: './camera-registration.component.scss'
 })
-export class CameraRegistrationComponent implements OnInit, OnDestroy {
+export class CameraRegistrationComponent implements OnInit, OnDestroy, AfterViewInit {
     registrationForm!: FormGroup;
     colleges: College[] = [];
 
@@ -85,6 +87,10 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy {
     openDropdownIndex: number | null = null; // For FormArray dropdowns
     modalSearch: string = '';
 
+    // Password Visibility
+    showPasswords: boolean[] = [false];
+    visibleTablePasswords: Set<string> = new Set();
+
     // Delete Confirmation
     itemToDelete: CameraRecord | null = null;
     deviceToDelete: CameraDevice | null = null;
@@ -103,7 +109,8 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy {
         private fb: FormBuilder,
         private cctvService: CctvService,
         private toastService: ToastService,
-        private iconService: IconService
+        private iconService: IconService,
+        private cdr: ChangeDetectorRef
     ) {
         this.createForm();
     }
@@ -111,6 +118,9 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy {
     ngOnInit(): void {
         this.loadColleges();
         this.loadCameras();
+    }
+
+    ngAfterViewInit(): void {
         this.refreshIcons();
     }
 
@@ -155,11 +165,13 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy {
 
     addCamera() {
         this.cameras.push(this.createCameraGroup());
+        this.showPasswords.push(false);
     }
 
     removeCamera(index: number) {
         if (this.cameras.length > 1) {
             this.cameras.removeAt(index);
+            this.showPasswords.splice(index, 1);
         }
     }
 
@@ -242,7 +254,7 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy {
         const collegeId = this.selectedFilterCollege || undefined;
         this.cctvService.getCameras(this.currentPage, this.pageSize, collegeId).subscribe({
             next: (response) => {
-                this.allRecords = (response.data || []).map((cam: any) => ({
+                this.allRecords = (response.data || []).filter((cam: any) => cam && cam.id).map((cam: any) => ({
                     id: cam.id,
                     collegeId: cam.collegeId,
                     name: cam.name,
@@ -251,15 +263,24 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy {
                     rtspPort: cam.rtspPort || 554,
                     channel: cam.channel || '',
                     isActive: cam.status === 'online',
-                    status: cam.status,
+                    status: cam.status || 'offline',
                     collegeName: cam.collegeName,
-                    streamUrl: cam.streamUrl
+                    streamUrl: cam.streamUrl,
+                    username: cam.username,
+                    password: cam.password
                 }));
                 this.totalRecords = response.total || 0;
                 this.totalPages = response.totalPages || 0;
                 this.groupCameras();
                 this.updateSelectAllState();
                 this.isLoading = false;
+                this.cdr.detectChanges();
+                
+                // Secondary check for delayed data or icons
+                setTimeout(() => {
+                    this.refreshIcons();
+                    this.cdr.detectChanges();
+                }, 500);
             },
             error: (err) => {
                 console.error('Error loading cameras:', err);
@@ -306,9 +327,12 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy {
                     isActive: cam.status === 'online',
                     status: cam.status,
                     collegeName: cam.collegeName,
-                    streamUrl: cam.streamUrl
+                    streamUrl: cam.streamUrl,
+                    username: cam.username,
+                    password: cam.password
                 }));
                 this.groupCameras();
+                this.cdr.detectChanges();
             }
         });
     }
@@ -411,10 +435,11 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy {
                 collegeId: record.collegeId,
                 ipAddress: record.ipAddress,
                 rtspPort: record.rtspPort,
-                username: '',
-                password: '',
+                username: record.username || '',
+                password: record.password || '',
                 isActive: record.isActive
             });
+            this.showPasswords = [false];
             // Make credentials optional for editing
             camGroup.get('password')?.clearValidators();
             camGroup.get('username')?.clearValidators();
@@ -436,6 +461,7 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy {
         } else {
             this.editingRecord = null;
             this.createForm();
+            this.showPasswords = [false];
         }
     }
 
@@ -539,6 +565,18 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy {
         this.deviceToDelete = device;
         this.itemToDelete = null;
         this.isConfirmModalOpen = true;
+    }
+
+    togglePasswordVisibility(index: number) {
+        this.showPasswords[index] = !this.showPasswords[index];
+    }
+
+    toggleTablePassword(id: string) {
+        if (this.visibleTablePasswords.has(id)) {
+            this.visibleTablePasswords.delete(id);
+        } else {
+            this.visibleTablePasswords.add(id);
+        }
     }
 
     onSubmit() {
