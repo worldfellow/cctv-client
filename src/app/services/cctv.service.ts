@@ -376,4 +376,10 @@ export class CctvService {
             }))
         );
     }
+
+    restartDashboardStream(cameraId: string, quality: 'high' | 'low' = 'low'): Observable<any> {
+        return this.http.post<any>(`${this.apiUrl}/dashboard/restart-stream/${cameraId}`, {}, {
+            params: { quality }
+        });
+    }
 }

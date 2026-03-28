@@ -30,8 +30,16 @@
                 <label for="password">Password</label>
                 <div class="input-wrapper">
                     <i data-lucide="lock" class="input-icon"></i>
-                    <input type="password" id="password" name="password" [(ngModel)]="loginData.password"
+                    <input [type]="showPassword ? 'text' : 'password'" id="password" name="password" [(ngModel)]="loginData.password"
                         placeholder="Enter your password" required>
+                    <button type="button" class="toggle-password" (click)="togglePasswordVisibility('login')">
+                        <ng-container *ngIf="showPassword">
+                            <i data-lucide="eye"></i>
+                        </ng-container>
+                        <ng-container *ngIf="!showPassword">
+                            <i data-lucide="eye-off"></i>
+                        </ng-container>
+                    </button>
                 </div>
             </div>
 
@@ -67,9 +75,17 @@
                 <label for="newPassword">New Password</label>
                 <div class="input-wrapper">
                     <i data-lucide="lock" class="input-icon"></i>
-                    <input type="password" id="newPassword" name="newPassword"
+                    <input [type]="showNewPassword ? 'text' : 'password'" id="newPassword" name="newPassword"
                         [(ngModel)]="changePasswordData.newPassword" placeholder="Enter new password" required
                         minlength="6">
+                    <button type="button" class="toggle-password" (click)="togglePasswordVisibility('new')">
+                        <ng-container *ngIf="showNewPassword">
+                            <i data-lucide="eye"></i>
+                        </ng-container>
+                        <ng-container *ngIf="!showNewPassword">
+                            <i data-lucide="eye-off"></i>
+                        </ng-container>
+                    </button>
                 </div>
             </div>
 
@@ -77,9 +93,17 @@
                 <label for="confirmPassword">Confirm Password</label>
                 <div class="input-wrapper">
                     <i data-lucide="lock" class="input-icon"></i>
-                    <input type="password" id="confirmPassword" name="confirmPassword"
+                    <input [type]="showConfirmPassword ? 'text' : 'password'" id="confirmPassword" name="confirmPassword"
                         [(ngModel)]="changePasswordData.confirmPassword" placeholder="Confirm new password" required
                         minlength="6">
+                    <button type="button" class="toggle-password" (click)="togglePasswordVisibility('confirm')">
+                        <ng-container *ngIf="showConfirmPassword">
+                            <i data-lucide="eye"></i>
+                        </ng-container>
+                        <ng-container *ngIf="!showConfirmPassword">
+                            <i data-lucide="eye-off"></i>
+                        </ng-container>
+                    </button>
                 </div>
             </div>
 

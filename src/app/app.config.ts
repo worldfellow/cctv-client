@@ -6,7 +6,7 @@ import {
   LucideAngularModule,
   AlertCircle, AlertTriangle, Building2, CameraOff, CheckCircle, CheckSquare, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Circle,
   Download, Edit3, FileCheck, FileText, Filter, FolderUp, Image, Info, Key, LayoutGrid, Loader, Loader2, Lock, Mail, Network, Play, Plus, PlusCircle, Plug, Radio, RotateCcw, Save, Search, SearchX, Shield, ShieldCheck, Square,
-  Trash2, UploadCloud, User, Users, UserCheck, UserPlus, UserX, Video, X, XCircle
+  Trash2, UploadCloud, User, Users, UserCheck, UserPlus, UserX, Video, X, XCircle, Eye, EyeOff
 } from 'lucide-angular';
 
 import { routes } from './app.routes';
@@ -51,7 +51,7 @@ export const appConfig: ApplicationConfig = {
     importProvidersFrom(LucideAngularModule.pick({
       AlertCircle, AlertTriangle, Building2, CameraOff, CheckCircle, CheckSquare, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Circle,
       Download, Edit3, FileCheck, FileText, Filter, FolderUp, Image, Info, Key, LayoutGrid, Loader, Loader2, Lock, Mail, Network, Play, Plus, PlusCircle, Plug, Radio, RotateCcw, Save, Search, SearchX, Shield, ShieldCheck, Square,
-      Trash2, UploadCloud, User, Users, UserCheck, UserPlus, UserX, Video, X, XCircle
+      Trash2, UploadCloud, User, Users, UserCheck, UserPlus, UserX, Video, X, XCircle, Eye, EyeOff
     }))
   ]
 };

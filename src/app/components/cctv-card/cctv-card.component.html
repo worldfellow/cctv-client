@@ -11,8 +11,14 @@
                 <span class="dot"></span>
                 {{ feed.status | titlecase }}
             </div>
-            <div class="play-btn">
-                <i data-lucide="maximize"></i>
+            
+            <div class="card-actions">
+                <button class="action-btn restart" (click)="onRestart($event)" title="Restart Stream">
+                    <i data-lucide="refresh-cw"></i>
+                </button>
+                <div class="play-btn">
+                    <i data-lucide="maximize"></i>
+                </div>
             </div>
         </div>
     </div>
