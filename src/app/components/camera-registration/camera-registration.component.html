@@ -130,7 +130,7 @@
                                     <lucide-icon name="video"></lucide-icon>
                                 </div>
                                 <div class="device-info">
-                                    <span class="ip-text">{{ record.ipAddress }}</span>
+                                    <span class="ip-text">{{ record.ipAddress }} <span *ngIf="record.deviceName" style="color: var(--primary-color); font-weight: 600;">({{ record.deviceName }})</span></span>
                                     <div class="user-credentials">
                                         <span class="user-text">Port: {{ record.rtspPort }} | User: {{ record.username || 'N/A' }}</span>
                                         <div class="password-toggle-inline" *ngIf="record.id">
@@ -252,18 +252,27 @@
                     <span>{{ registrationErrorMessage }}</span>
                 </div>
                 <div formArrayName="cameras" class="camera-list">
-                    <div *ngFor="let camera of cameras.controls; let camIndex=index; trackBy: trackByIndex"
-                        [formGroupName]="camIndex" class="device-card nested-glass">
-
-                        <div class="card-header">
-                            <h3 class="device-title">{{ isEditing ? 'Edit Camera' : 'Device ' + (camIndex + 1) }}</h3>
-                            <button *ngIf="cameras.length > 1 && !isEditing" type="button" class="delete-btn"
+                    <div class="camera-block glass-morphism" *ngFor="let camera of cameras.controls; let camIndex=index" [formGroupName]="camIndex">
+                        <div class="camera-header">
+                            <div class="device-num">Device #{{ camIndex + 1 }}</div>
+                            <button *ngIf="cameras.length > 1 && !isEditing" type="button" class="remove-camera-btn"
                                 (click)="removeCamera(camIndex)">
-                                <lucide-icon name="trash-2"></lucide-icon>
+                                <lucide-icon name="x"></lucide-icon> Remove Device
                             </button>
                         </div>
 
-                        <div class="form-grid">
+                        <div class="management-form">
+                            <div class="form-group full-width">
+                                <label>Hardware Device (Optional)</label>
+                                <div class="input-wrapper">
+                                    <lucide-icon name="server" class="input-icon"></lucide-icon>
+                                    <select formControlName="deviceId" class="custom-select" (change)="onDeviceSelect($event, camIndex)">
+                                        <option value="">Select a Hardware Device</option>
+                                        <option *ngFor="let d of devices" [value]="d.id">{{ d.deviceName }} ({{ d.rtspLink }})</option>
+                                    </select>
+                                </div>
+                            </div>
+
                             <div class="form-group">
                                 <label>College/Campus</label>
                                 <div class="custom-dropdown">

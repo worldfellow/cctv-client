@@ -25,6 +25,11 @@
                 <i data-lucide="building-2"></i>
                 <span>Colleges</span>
             </a>
+            <a *ngIf="isSuperAdmin(user)" routerLink="/devicesetup" routerLinkActive="active"
+                class="nav-item" (click)="onNavClick()" [attr.data-tooltip]="!isSidebarOpen ? 'Device Setup' : null">
+                <i data-lucide="server"></i>
+                <span>Device Setup</span>
+            </a>
             <a *ngIf="hasMenuAccess(user, 'add-camera')" routerLink="/add-camera" routerLinkActive="active"
                 class="nav-item" (click)="onNavClick()" [attr.data-tooltip]="!isSidebarOpen ? 'Camera Setup' : null">
                 <i data-lucide="video"></i>

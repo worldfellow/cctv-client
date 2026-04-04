@@ -23,6 +23,8 @@ export interface CameraRecord {
     streamUrl?: string;
     username?: string;
     password?: string;
+    deviceId?: string;
+    deviceName?: string;
 }
 
 // Grouped device for table display
@@ -52,6 +54,7 @@ export interface CameraDevice {
 export class CameraRegistrationComponent implements OnInit, OnDestroy, AfterViewInit {
     registrationForm!: FormGroup;
     colleges: College[] = [];
+    devices: any[] = [];
 
     // Table & Data State
     allRecords: CameraRecord[] = [];
@@ -117,6 +120,7 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy, AfterView
 
     ngOnInit(): void {
         this.loadColleges();
+        this.loadDevices();
         this.loadCameras();
     }
 
@@ -143,8 +147,25 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy, AfterView
             username: ['', Validators.required],
             password: ['', Validators.required],
             isActive: [true],
+            deviceId: [''],
             channels: this.fb.array([this.createChannelGroup()])
         });
+    }
+
+    onDeviceSelect(event: any, cameraIndex: number) {
+        const deviceId = event.target.value;
+        if (!deviceId) return;
+
+        const device = this.devices.find(d => d.id === deviceId);
+        if (device) {
+            const cameraGroup = this.cameras.at(cameraIndex);
+            cameraGroup.patchValue({
+                deviceId: device.id,
+                // If the device has these fields, we can auto-fill. 
+                // But simplified Device only has name and rtspLink.
+                // We'll see how the user wants to use this link.
+            });
+        }
     }
 
     createChannelGroup(): FormGroup {
@@ -193,6 +214,17 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy, AfterView
             },
             error: (err) => {
                 console.error('Error loading colleges:', err);
+            }
+        });
+    }
+
+    loadDevices(): void {
+        this.cctvService.getDevices().subscribe({
+            next: (devices) => {
+                this.devices = devices;
+            },
+            error: (err) => {
+                console.error('Error loading devices:', err);
             }
         });
     }
@@ -267,7 +299,9 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy, AfterView
                     collegeName: cam.collegeName,
                     streamUrl: cam.streamUrl,
                     username: cam.username,
-                    password: cam.password
+                    password: cam.password,
+                    deviceId: cam.deviceId,
+                    deviceName: cam.deviceName
                 }));
                 this.totalRecords = response.total || 0;
                 this.totalPages = response.totalPages || 0;
@@ -437,7 +471,8 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy, AfterView
                 rtspPort: record.rtspPort,
                 username: record.username || '',
                 password: record.password || '',
-                isActive: record.isActive
+                isActive: record.isActive,
+                deviceId: record.deviceId || ''
             });
             this.showPasswords = [false];
             // Make credentials optional for editing
@@ -676,7 +711,8 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy, AfterView
                     channel: ch.channel,
                     username: device.username,
                     password: device.password,
-                    isActive: device.isActive
+                    isActive: device.isActive,
+                    deviceId: device.deviceId || null
                 });
             });
         });

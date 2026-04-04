@@ -63,6 +63,14 @@ export interface CctvFeed {
     };
 }
 
+export interface Device {
+    id?: string;
+    deviceName: string;
+    rtspLink: string;
+    createdAt?: string;
+    updatedAt?: string;
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -391,5 +399,24 @@ export class CctvService {
                 return response;
             })
         );
+    }
+
+    // Device Management
+    getDevices(collegeId?: string): Observable<Device[]> {
+        const params: any = {};
+        if (collegeId) params.collegeId = collegeId;
+        return this.http.get<Device[]>(`${this.apiUrl}/devices`, { params });
+    }
+
+    createDevice(device: Partial<Device>): Observable<Device> {
+        return this.http.post<Device>(`${this.apiUrl}/devices`, device, this.getHeaders());
+    }
+
+    updateDevice(id: string, device: Partial<Device>): Observable<Device> {
+        return this.http.put<Device>(`${this.apiUrl}/devices/${id}`, device, this.getHeaders());
+    }
+
+    deleteDevice(id: string): Observable<any> {
+        return this.http.delete(`${this.apiUrl}/devices/${id}`, this.getHeaders());
     }
 }
