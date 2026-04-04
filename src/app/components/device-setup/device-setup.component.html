@@ -1,0 +1,138 @@
+<div class="device-setup-container">
+    <div class="header-section">
+        <div class="title-info">
+            <h1 class="gradient-text">Device Setup</h1>
+            <p class="subtitle">Register hardware devices and configure RTSP endpoints</p>
+        </div>
+        <div class="actions">
+            <button class="add-btn" (click)="openModal()">
+                <lucide-icon name="plus"></lucide-icon>
+                <span>Add Device</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Device List Table -->
+    <div class="table-card glass-morphism">
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Company</th>
+                        <th>RTSP Link</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody [class.loading-fade]="isLoading">
+                    <tr *ngFor="let device of devices">
+                        <td>
+                            <span class="device-name">{{ device.deviceName }}</span>
+                        </td>
+                        <td>
+                            <div class="rtsp-cell">
+                                <code class="rtsp-link">{{ device.rtspLink }}</code>
+                                <button class="view-link-btn" (click)="viewFullLink(device.rtspLink)" title="View Full Link">
+                                    <lucide-icon name="more-horizontal"></lucide-icon>
+                                </button>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="action-btn edit" (click)="openModal(device)">
+                                    <lucide-icon name="edit-3"></lucide-icon>
+                                </button>
+                                <button class="action-btn delete" (click)="confirmDelete(device.id!)">
+                                    <lucide-icon name="trash-2"></lucide-icon>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr *ngIf="devices.length === 0 && !isLoading">
+                        <td>
+                            <div class="network-info">
+                                <span class="ip-text">Ready</span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal Overlay -->
+    <div class="modal-overlay" *ngIf="isModalOpen" (click)="closeModal()">
+        <div class="modal-content glass-morphism" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h2>{{ isEditing ? 'Edit Device' : 'Register New Device' }}</h2>
+                <button class="close-btn" (click)="closeModal()">
+                    <lucide-icon name="x"></lucide-icon>
+                </button>
+            </div>
+
+            <form [formGroup]="deviceForm" (ngSubmit)="onSubmit()" class="form-grid">
+
+                <div class="form-group">
+                    <label>Device Name</label>
+                    <div class="input-wrapper">
+                        <lucide-icon name="server" class="input-icon"></lucide-icon>
+                        <input type="text" formControlName="deviceName" placeholder="e.g. NVR Entrance">
+                    </div>
+                </div>
+
+                <div class="form-group full-width">
+                    <label>RTSP Link Template</label>
+                    <div class="input-wrapper">
+                        <lucide-icon name="link" class="input-icon"></lucide-icon>
+                        <input type="text" formControlName="rtspLink" #rtspInput
+                            placeholder="rtsp://$userTemplate:$passwordTemplate@$ipTemplate:$portTemplate/path/">
+                    </div>
+                    <div class="template-helpers">
+                        <span class="helper-label">Insert:</span>
+                        <button type="button" class="template-tag" (click)="insertTemplate('$userTemplate')">$userTemplate</button>
+                        <button type="button" class="template-tag" (click)="insertTemplate('$passwordTemplate')">$passwordTemplate</button>
+                        <button type="button" class="template-tag" (click)="insertTemplate('$ipTemplate')">$ipTemplate</button>
+                        <button type="button" class="template-tag" (click)="insertTemplate('$portTemplate')">$portTemplate</button>
+                        <button type="button" class="template-tag" (click)="insertTemplate('$channelTemplate')">$channelTemplate</button>
+                    </div>
+                    <p class="help-text">Build your RTSP URL using these variables. Click to insert.</p>
+                </div>
+
+                <div class="modal-footer full-width">
+                    <button type="button" class="cancel-btn" (click)="closeModal()">Cancel</button>
+                    <button type="submit" class="submit-btn" [disabled]="deviceForm.invalid || isLoading">
+                        {{ isLoading ? 'Saving...' : (isEditing ? 'Update Device' : 'Save Device') }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Confirm Delete Modal -->
+    <app-confirm-modal [isOpen]="isConfirmModalOpen" [title]="confirmModalTitle" [message]="confirmModalMessage"
+        [isLoading]="isLoading" (confirm)="onConfirmDelete()" (cancel)="onCancelDelete()">
+    </app-confirm-modal>
+
+    <!-- View Link Modal -->
+    <div class="modal-overlay" *ngIf="isViewLinkModalOpen" (click)="closeViewLinkModal()">
+        <div class="modal-content glass-morphism view-link-modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h2>RTSP Link Template</h2>
+                <button class="close-btn" (click)="closeViewLinkModal()">
+                    <lucide-icon name="x"></lucide-icon>
+                </button>
+            </div>
+            
+            <div class="full-link-container">
+                <code class="full-link-code">{{ selectedLinkForView }}</code>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="submit-btn copy-btn" (click)="copyToClipboard(selectedLinkForView)">
+                    <lucide-icon name="copy"></lucide-icon>
+                    <span>Copy to Clipboard</span>
+                </button>
+                <button type="button" class="cancel-btn" (click)="closeViewLinkModal()">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
