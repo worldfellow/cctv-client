@@ -25,8 +25,8 @@
                 <i data-lucide="building-2"></i>
                 <span>Colleges</span>
             </a>
-            <a *ngIf="isSuperAdmin(user)" routerLink="/devicesetup" routerLinkActive="active"
-                class="nav-item" (click)="onNavClick()" [attr.data-tooltip]="!isSidebarOpen ? 'Device Setup' : null">
+            <a *ngIf="isSuperAdmin(user)" routerLink="/devicesetup" routerLinkActive="active" class="nav-item"
+                (click)="onNavClick()" [attr.data-tooltip]="!isSidebarOpen ? 'Device Setup' : null">
                 <i data-lucide="server"></i>
                 <span>Device Setup</span>
             </a>
@@ -53,12 +53,6 @@
             </a>
         </nav>
 
-        <div class="sidebar-footer">
-            <button class="logout-btn" (click)="logout()" [attr.data-tooltip]="!isSidebarOpen ? 'Logout' : null">
-                <i data-lucide="log-out"></i>
-                <span>Logout</span>
-            </button>
-        </div>
     </aside>
 
     <!-- Mobile Sidebar Overlay -->
@@ -109,14 +103,29 @@
                     <i data-lucide="search"></i>
                     <input type="text" placeholder="Search..." [(ngModel)]="searchQuery">
                 </div> -->
-                <div class="user-profile" *ngIf="user$ | async as user">
-                    <div class="avatar">
-                        <img [src]="'https://ui-avatars.com/api/?name=' + (user.firstName + '+' + user.lastName) + '&background=6366f1&color=fff'"
-                            alt="User">
+                <div class="user-profile-container">
+                    <div class="user-profile" *ngIf="user$ | async as user" (click)="toggleUserMenu()">
+                        <div class="avatar">
+                            <img [src]="'https://ui-avatars.com/api/?name=' + (user.firstName + '+' + user.lastName) + '&background=6366f1&color=fff'"
+                                alt="User">
+                        </div>
+                        <div class="user-info">
+                            <span class="name">{{ user.firstName }} {{ user.lastName }}</span>
+                            <span class="role">{{ user.role }}</span>
+                        </div>
+                        <i data-lucide="chevron-down" class="dropdown-icon" [class.rotate]="showUserMenu"></i>
                     </div>
-                    <div class="user-info">
-                        <span class="name">{{ user.firstName }} {{ user.lastName }}</span>
-                        <span class="role">{{ user.role }}</span>
+
+                    <!-- User Dropdown Menu -->
+                    <div class="user-menu glass-morphism" *ngIf="showUserMenu" (click)="$event.stopPropagation()">
+                        <button class="menu-item" (click)="openChangePasswordModal()">
+                            <i data-lucide="lock"></i>
+                            <span>Change Password</span>
+                        </button>
+                        <button class="menu-item logout" (click)="logout()">
+                            <i data-lucide="log-out"></i>
+                            <span>Logout</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -126,6 +135,133 @@
             <router-outlet></router-outlet>
         </div>
     </main>
+
+    <!-- Change Password Modal -->
+    <div class="modal-overlay" *ngIf="isChangePasswordModalOpen" (click)="closeChangePasswordModal()">
+        <div class="modal-content glass-morphism change-password-modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <div class="header-title">
+                    <div class="animated-icon-container">
+                        <i data-lucide="key" class="header-icon rotate-animation"></i>
+                    </div>
+                    <h3>Change Password</h3>
+                </div>
+                <button class="close-btn" (click)="closeChangePasswordModal()">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Animated Background Icon -->
+                <div class="body-bg-animation">
+                    <i data-lucide="shield-check" class="bg-icon pulse-animation"></i>
+                </div>
+
+                <form (ngSubmit)="updatePassword()" #passwordForm="ngForm">
+                    <div class="form-group">
+                        <label>New Password</label>
+                        <div class="input-container">
+                            <i data-lucide="lock" class="input-icon"></i>
+                            <input [type]="showNewPassword ? 'text' : 'password'" name="newPassword"
+                                [(ngModel)]="changePasswordModel.newPassword"
+                                (ngModelChange)="checkPasswordStrength($event)" placeholder="Enter new password"
+                                required>
+                            <button type="button" class="visibility-toggle" (click)="toggleNewPasswordVisibility()"
+                                title="Toggle visibility">
+                                <i *ngIf="showNewPassword" data-lucide="eye"></i>
+                                <i *ngIf="!showNewPassword" data-lucide="eye-off"></i>
+                            </button>
+                        </div>
+
+                        <!-- Password Strength Meter -->
+                        <div class="strength-meter" *ngIf="changePasswordModel.newPassword">
+                            <div class="strength-bar">
+                                <div class="progress" [style.width.%]="strengthProgress"
+                                    [style.background-color]="strengthColor"></div>
+                            </div>
+                            <span class="strength-text" [style.color]="strengthColor">{{ passwordStrength }}</span>
+                        </div>
+
+                        <!-- Complexity Requirements -->
+                        <div class="complexity-requirements"
+                            *ngIf="changePasswordModel.newPassword && !isPasswordComplexityValid">
+                            <div class="requirement" [class.valid]="changePasswordModel.newPassword.length >= 8">
+                                <i *ngIf="changePasswordModel.newPassword.length >= 8" data-lucide="check"></i>
+                                <i *ngIf="changePasswordModel.newPassword.length < 8" data-lucide="circle"></i>
+                                <span>At least 8 characters</span>
+                            </div>
+                            <div class="requirement" [class.valid]="hasCapitalLetter(changePasswordModel.newPassword)">
+                                <i *ngIf="hasCapitalLetter(changePasswordModel.newPassword)" data-lucide="check"></i>
+                                <i *ngIf="!hasCapitalLetter(changePasswordModel.newPassword)" data-lucide="circle"></i>
+                                <span>One capital letter</span>
+                            </div>
+                            <div class="requirement" [class.valid]="hasSmallLetter(changePasswordModel.newPassword)">
+                                <i *ngIf="hasSmallLetter(changePasswordModel.newPassword)" data-lucide="check"></i>
+                                <i *ngIf="!hasSmallLetter(changePasswordModel.newPassword)" data-lucide="circle"></i>
+                                <span>One small letter</span>
+                            </div>
+                            <div class="requirement" [class.valid]="hasNumber(changePasswordModel.newPassword)">
+                                <i *ngIf="hasNumber(changePasswordModel.newPassword)" data-lucide="check"></i>
+                                <i *ngIf="!hasNumber(changePasswordModel.newPassword)" data-lucide="circle"></i>
+                                <span>One number</span>
+                            </div>
+                            <div class="requirement" [class.valid]="hasSpecialChar(changePasswordModel.newPassword)">
+                                <i *ngIf="hasSpecialChar(changePasswordModel.newPassword)" data-lucide="check"></i>
+                                <i *ngIf="!hasSpecialChar(changePasswordModel.newPassword)" data-lucide="circle"></i>
+                                <span>One special character</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Confirm Password</label>
+                        <div class="input-container">
+                            <i data-lucide="shield-check" class="input-icon"></i>
+                            <input [type]="showConfirmPassword ? 'text' : 'password'" name="confirmPassword"
+                                [(ngModel)]="changePasswordModel.confirmPassword"
+                                (ngModelChange)="onConfirmPasswordInput($event)" placeholder="Confirm new password"
+                                required>
+                            <button type="button" class="visibility-toggle" (click)="toggleConfirmPasswordVisibility()"
+                                title="Toggle visibility">
+                                <i *ngIf="showConfirmPassword" data-lucide="eye"></i>
+                                <i *ngIf="!showConfirmPassword" data-lucide="eye-off"></i>
+                            </button>
+                        </div>
+                        <div class="password-match-info" *ngIf="changePasswordModel.confirmPassword || hasSpaceError">
+                            <span class="mismatch" *ngIf="hasSpaceError">
+                                <i data-lucide="alert-triangle"></i> Space is not allowed
+                            </span>
+                            <span class="mismatch"
+                                *ngIf="!hasSpaceError && changePasswordModel.newPassword !== changePasswordModel.confirmPassword">
+                                <i data-lucide="info"></i> Password not matching
+                            </span>
+                            <span class="match"
+                                *ngIf="!hasSpaceError && changePasswordModel.newPassword === changePasswordModel.confirmPassword && changePasswordModel.newPassword">
+                                <i data-lucide="check-circle"></i> Passwords match
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="error-message" *ngIf="passwordError">
+                        <i data-lucide="alert-circle"></i>
+                        <span>{{ passwordError }}</span>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn-secondary" (click)="closeChangePasswordModal()">Cancel</button>
+                        <button type="submit" class="btn-primary"
+                            [disabled]="isUpdatingPassword || !isPasswordComplexityValid || changePasswordModel.newPassword !== changePasswordModel.confirmPassword">
+                            <span *ngIf="!isUpdatingPassword">Update Password</span>
+                            <span *ngIf="isUpdatingPassword" class="loader-container">
+                                <i data-lucide="loader-2" class="spin"></i>
+                                Updating...
+                            </span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <!-- Enlarged Logo Modal -->
     <div class="enlarged-logo-overlay" *ngIf="isLogoEnlarged" (click)="toggleEnlargedLogo()">
