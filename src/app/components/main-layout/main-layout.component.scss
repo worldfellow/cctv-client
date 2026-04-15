@@ -222,6 +222,7 @@
                 color: var(--text-main);
                 background: linear-gradient(135deg, var(--text-main) 0%, var(--primary) 100%);
                 -webkit-background-clip: text;
+                background-clip: text;
                 -webkit-text-fill-color: transparent;
             }
         }
@@ -539,4 +540,441 @@
         opacity: 1;
         pointer-events: auto;
     }
+}
+
+/* User Profile Dropdown & Modal Styles */
+.user-profile-container {
+    position: relative;
+
+    .user-profile {
+        cursor: pointer;
+        padding: 4px 12px;
+        border-radius: 12px;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .dropdown-icon {
+            width: 16px;
+            height: 16px;
+            color: var(--text-muted);
+            transition: transform 0.3s ease;
+
+            &.rotate {
+                transform: rotate(180deg);
+            }
+        }
+    }
+}
+
+.user-menu {
+    position: absolute;
+    top: calc(100% + 1rem);
+    right: 0;
+    width: 220px;
+    padding: 0.5rem;
+    z-index: 1100;
+    animation: slideUp 0.3s ease-out;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+
+    .menu-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
+        width: 100%;
+        border-radius: 8px;
+        color: var(--text-main);
+        font-size: 0.9rem;
+        transition: var(--transition);
+        background: transparent;
+        border: none;
+        cursor: pointer;
+
+        &:hover {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+        }
+
+        &.logout {
+            color: #f87171;
+
+            &:hover {
+                background: rgba(248, 113, 113, 0.1);
+            }
+        }
+
+        i,
+        ::ng-deep svg {
+            width: 18px;
+            height: 18px;
+        }
+    }
+}
+
+/* Modal Overlay */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    z-index: 3000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+}
+
+.change-password-modal {
+    background: var(--card-bg);
+    border-radius: 24px;
+    width: 100%;
+    max-width: 450px;
+    border: 1px solid var(--card-border);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    position: relative;
+    animation: scaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.modal-header {
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--card-border);
+
+    .header-title {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+
+        h3 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+    }
+
+    .animated-icon-container {
+        width: 40px;
+        height: 40px;
+        background: rgba(99, 102, 241, 0.15);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        .header-icon {
+            color: var(--primary);
+            width: 20px;
+            height: 20px;
+        }
+    }
+
+    .close-btn {
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        color: var(--text-muted);
+        transition: var(--transition);
+
+        &:hover {
+            color: #f87171;
+        }
+    }
+}
+
+.modal-body {
+    padding: 2rem;
+    position: relative;
+    max-height: 80vh;
+    overflow-y: auto;
+
+    .body-bg-animation {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 0;
+        opacity: 0.1;
+        pointer-events: none;
+
+        .bg-icon {
+            width: 180px;
+            height: 180px;
+            color: var(--primary);
+        }
+    }
+
+    form {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-muted);
+    }
+
+    .input-container {
+        position: relative;
+
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 18px;
+            height: 18px;
+            color: var(--text-muted);
+        }
+
+        input {
+            width: 100%;
+            padding: 0.75rem 3rem 0.75rem 3rem;
+            background: rgba(15, 23, 42, 0.3);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            color: var(--text-main);
+            transition: var(--transition);
+
+            &:focus {
+                outline: none;
+                border-color: var(--primary);
+                background: rgba(15, 23, 42, 0.5);
+            }
+        }
+
+        .visibility-toggle {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+
+            &:hover {
+                color: var(--primary);
+            }
+
+            i,
+            ::ng-deep svg {
+                width: 18px;
+                height: 18px;
+            }
+        }
+    }
+}
+
+.strength-meter {
+    margin-top: 0.5rem;
+
+    .strength-bar {
+        height: 4px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 2px;
+        overflow: hidden;
+        margin-bottom: 0.25rem;
+
+        .progress {
+            height: 100%;
+            transition: width 0.3s ease, background-color 0.3s ease;
+        }
+    }
+
+    .strength-text {
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+}
+
+.error-message {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #f87171;
+    font-size: 0.85rem;
+    background: rgba(248, 113, 113, 0.1);
+    padding: 0.75rem;
+    border-radius: 8px;
+    border: 1px solid rgba(248, 113, 113, 0.2);
+}
+
+.modal-footer {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+
+    button {
+        flex: 1;
+        padding: 0.75rem;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: var(--transition);
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-main);
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+    }
+
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+
+        &:hover {
+            background: var(--primary-hover);
+        }
+
+        &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    }
+}
+
+.complexity-requirements {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    border: 1px solid var(--card-border);
+
+    .requirement {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        transition: var(--transition);
+
+        i,
+        ::ng-deep svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        &.valid {
+            color: #34d399;
+        }
+    }
+}
+
+.password-match-info {
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-top: 0.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+
+    span {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .mismatch {
+        color: #f87171;
+    }
+
+    .match {
+        color: #34d399;
+    }
+
+    i,
+    ::ng-deep svg {
+        width: 14px;
+        height: 14px;
+    }
+}
+
+/* Animations */
+.rotate-animation {
+    animation: iconRotate 3s infinite linear;
+}
+
+@keyframes iconRotate {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.pulse-animation {
+    animation: iconPulse 2s infinite ease-in-out;
+}
+
+@keyframes iconPulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 0.1;
+    }
+
+    50% {
+        transform: scale(1.1);
+        opacity: 0.15;
+    }
+}
+
+.spin {
+    animation: spin 1s infinite linear;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loader-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
 }
