@@ -220,6 +220,10 @@ export class CctvService {
         return this.http.post(`${this.apiUrl}/users/change-password`, { email, newPassword }, this.getHeaders());
     }
 
+    updateProfilePassword(newPassword: string): Observable<any> {
+        return this.http.post(`${this.apiUrl}/users/update-profile-password`, { newPassword }, this.getHeaders());
+    }
+
     resetUserPassword(userId: string): Observable<any> {
         return this.http.post(`${this.apiUrl}/users/${userId}/reset-password`, {}, this.getHeaders());
     }
