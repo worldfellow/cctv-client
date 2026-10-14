@@ -3,8 +3,8 @@
     <aside class="sidebar glass-morphism" [class.collapsed]="!isSidebarOpen" [class.open]="isSidebarOpen">
         <div class="sidebar-header" *ngIf="config$ | async as config">
             <div class="logo" (click)="toggleEnlargedLogo()" title="View full logo">
-                <img *ngIf="config.logoUrl" [src]="config.logoUrl" alt="Logo" class="logo-img">
-                <i *ngIf="!config.logoUrl" data-lucide="shield" class="logo-icon"></i>
+                <img *ngIf="config.logoUrl && config.logoUrl !== failedLogoUrl" [src]="config.logoUrl" alt="Logo" class="logo-img" (error)="onLogoError(config.logoUrl)">
+                <i *ngIf="!config.logoUrl || config.logoUrl === failedLogoUrl" data-lucide="shield" class="logo-icon"></i>
                 <span class="logo-text">{{ config.appName }}</span>
             </div>
         </div>
@@ -270,8 +270,8 @@
                 <button class="close-btn" (click)="toggleEnlargedLogo()">
                     <i data-lucide="x"></i>
                 </button>
-                <img *ngIf="config.logoUrl" [src]="config.logoUrl" alt="Enlarged Logo">
-                <div *ngIf="!config.logoUrl" class="placeholder-large">
+                <img *ngIf="config.logoUrl && config.logoUrl !== failedLogoUrl" [src]="config.logoUrl" alt="Enlarged Logo" (error)="onLogoError(config.logoUrl)">
+                <div *ngIf="!config.logoUrl || config.logoUrl === failedLogoUrl" class="placeholder-large">
                     <i data-lucide="shield"></i>
                     <h2>{{ config.appName }}</h2>
                 </div>
