@@ -29,6 +29,13 @@ export class LoginComponent implements OnInit, AfterViewInit {
 
   errorMessage = '';
   isLoading = false;
+  // Logo URL whose image failed to load; the shield placeholder is shown instead
+  failedLogoUrl: string | null = null;
+
+  onLogoError(url: string): void {
+    this.failedLogoUrl = url;
+    this.refreshIcons();
+  }
 
   get config$() {
     return this.cctvService.systemConfig$;

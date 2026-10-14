@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, BehaviorSubject, tap } from 'rxjs';
-import { takeUntil, debounceTime, distinctUntilChanged, map } from 'rxjs/operators';
+import { takeUntil, debounceTime, distinctUntilChanged, map, retry } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 export interface User {
@@ -82,9 +82,10 @@ export class CctvService {
     private collegesSubject = new BehaviorSubject<any[]>([]);
     public colleges$ = this.collegesSubject.asObservable();
 
+    // No logoUrl until the server config arrives, so the shield placeholder shows instead of a broken image
     private systemConfigSubject = new BehaviorSubject<any>({
         appName: 'CCTV Surveillance',
-        logoUrl: '/assets/logo.png'
+        logoUrl: ''
     });
     public systemConfig$ = this.systemConfigSubject.asObservable();
 
@@ -123,7 +124,11 @@ export class CctvService {
     }
 
     private loadSystemConfig(): void {
-        this.getSystemConfig().subscribe({
+        // The config is only loaded once per page load, so retry while the server is starting or restarting
+        // instead of keeping the defaults (and no logo) for the whole session
+        this.getSystemConfig().pipe(
+            retry({ count: 10, delay: 3000 })
+        ).subscribe({
             next: (config) => {
                 if (config) this.systemConfigSubject.next(config);
             },
