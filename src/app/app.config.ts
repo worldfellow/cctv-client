@@ -10,44 +10,14 @@ import {
 } from 'lucide-angular';
 
 import { routes } from './app.routes';
-import { authInterceptor } from './interceptors/auth.interceptor';
-
-import { environment } from '../environments/environment';
-
-import {
-  provideKeycloak,
-  createInterceptorCondition,
-  INCLUDE_BEARER_TOKEN_INTERCEPTOR_CONFIG,
-  includeBearerTokenInterceptor
-} from 'keycloak-angular';
+import { authInterceptor, bearerInterceptor } from './interceptors/auth.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
-    provideHttpClient(withInterceptorsFromDi(), withInterceptors([includeBearerTokenInterceptor, authInterceptor])),
-    provideKeycloak({
-      config: {
-        url: environment.keycloak.url,
-        realm: environment.keycloak.realm,
-        clientId: environment.keycloak.clientId
-      },
-      initOptions: {
-        onLoad: 'check-sso',
-        silentCheckSsoRedirectUri: window.location.origin + '/silent-check-sso.html',
-        checkLoginIframe: false
-      }
-    }),
+    provideHttpClient(withInterceptorsFromDi(), withInterceptors([bearerInterceptor, authInterceptor])),
     provideAnimations(),
-    {
-      provide: INCLUDE_BEARER_TOKEN_INTERCEPTOR_CONFIG,
-      useValue: [
-        createInterceptorCondition({
-          urlPattern: new RegExp(`^${environment.apiUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}|^\/api`, 'i'),
-          bearerPrefix: 'Bearer'
-        })
-      ]
-    },
     importProvidersFrom(LucideAngularModule.pick({
       AlertCircle, AlertTriangle, Building2, CameraOff, CheckCircle, CheckSquare, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Circle,
       Download, Edit3, FileCheck, FileText, Filter, FolderUp, Image, Info, Key, LayoutGrid, Loader, Loader2, Lock, Mail, Network, Play, Plus, PlusCircle, Plug, Radio, RotateCcw, Save, Search, SearchX, Shield, ShieldCheck, Square,
