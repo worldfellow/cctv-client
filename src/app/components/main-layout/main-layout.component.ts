@@ -6,7 +6,7 @@ import { ThemeService, ThemeType } from '../../services/theme.service';
 import { CctvService, User } from '../../services/cctv.service';
 import { IconService } from '../../services/icon.service';
 import { Subscription } from 'rxjs';
-import Keycloak from 'keycloak-js';
+import { AuthSessionService } from '../../services/auth-session.service';
 
 @Component({
   selector: 'app-main-layout',
@@ -41,7 +41,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private routerSubscription: Subscription;
   private configSubscription: Subscription;
-  private keycloak = inject(Keycloak);
+  private session = inject(AuthSessionService);
 
   constructor(
     private router: Router,
@@ -303,12 +303,8 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
 
   logout(): void {
     this.cctvService.clearAuth();
-    localStorage.removeItem('kc_token');
-    localStorage.removeItem('kc_refreshToken');
-    localStorage.removeItem('kc_idToken');
-    this.keycloak.logout({
-      redirectUri: window.location.origin + '/login'
-    });
+    this.session.clear();
+    this.router.navigate(['/login']);
   }
 
   toggleEnlargedLogo(): void {
