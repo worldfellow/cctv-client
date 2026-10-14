@@ -22,6 +22,8 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
   showThemeMenu: boolean = false;
   showUserMenu: boolean = false;
   isLogoEnlarged: boolean = false;
+  // Logo URL whose image failed to load; the shield icon is shown until a different logo is configured
+  failedLogoUrl: string | null = null;
   isChangePasswordModalOpen: boolean = false;
 
   // Change Password Form
@@ -309,6 +311,11 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
 
   toggleEnlargedLogo(): void {
     this.isLogoEnlarged = !this.isLogoEnlarged;
+  }
+
+  onLogoError(url: string): void {
+    this.failedLogoUrl = url;
+    this.refreshIcons();
   }
 
   private refreshIcons(): void {
