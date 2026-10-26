@@ -854,6 +854,26 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy, AfterView
         });
     }
 
+    downloadAnalyticsReport() {
+        const collegeId = this.selectedFilterCollege;
+        this.cctvService.downloadCameraAnalyticsReport(collegeId).subscribe({
+            next: (blob) => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                const fileName = collegeId ? `Camera_Analytics_Report_${this.selectedFilterCollegeName}.xlsx` : 'Camera_Analytics_Report_All_Colleges.xlsx';
+                a.download = fileName;
+                a.click();
+                window.URL.revokeObjectURL(url);
+                this.toastService.show('Analytics report downloaded successfully', 'success');
+            },
+            error: (err) => {
+                console.error('Error downloading analytics report:', err);
+                this.toastService.show('Failed to download analytics report', 'error');
+            }
+        });
+    }
+
     triggerFileInput() {
         if (this.fileInput) {
             this.fileInput.nativeElement.click();

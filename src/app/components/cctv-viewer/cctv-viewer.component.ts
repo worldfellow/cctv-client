@@ -107,7 +107,8 @@ export class CctvViewerComponent implements AfterViewInit, OnDestroy {
         audio: false,
         disableGl: false, // Use WebGL for significantly better performance
         preserveDrawingBuffer: true, // Required for screenshots with WebGL
-        videoBufferSize: 2 * 1024 * 1024, // Optimized for HD streams
+        // Room for large keyframes at the higher Ultra HD bitrate
+        videoBufferSize: (this.currentQuality === 'ultra' ? 4 : 2) * 1024 * 1024,
         throttled: false, // Don't throttle - process data immediately to avoid lag
         chunkSize: 512 * 1024, // Process large chunks for smoother playback
         loop: true

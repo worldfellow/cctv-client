@@ -49,6 +49,12 @@
                 <span class="tooltip-text">Bulk Edit Camera Details</span>
             </button>
 
+            <button type="button" class="btn-secondary tooltip" (click)="downloadAnalyticsReport()">
+                <lucide-icon name="file-text"></lucide-icon>
+                <span>Analytics Report</span>
+                <span class="tooltip-text">Download Camera Analytics Report (Excel)</span>
+            </button>
+
             <button *ngIf="hasActionAccess('camera_create')" type="button" class="add-btn" (click)="openModal(false)">
                 <lucide-icon name="plus"></lucide-icon>
                 <span>Add Camera</span>
@@ -240,8 +246,16 @@
     <div class="modal-overlay" *ngIf="isModalOpen" (click)="closeModal()">
         <div class="modal-content glass-morphism modal-lg" (click)="$event.stopPropagation()">
             <div class="modal-header">
-                <h2>{{ isEditing ? 'Edit Camera Device' : 'Register Camera Devices' }}</h2>
-                <button class="close-btn" (click)="closeModal()">
+                <div class="modal-title">
+                    <div class="title-icon">
+                        <lucide-icon name="video"></lucide-icon>
+                    </div>
+                    <div>
+                        <h2>{{ isEditing ? 'Edit Camera Device' : 'Register Camera Devices' }}</h2>
+                        <p class="modal-subtitle">Connection details, credentials and channels for each device</p>
+                    </div>
+                </div>
+                <button type="button" class="close-btn" (click)="closeModal()">
                     <lucide-icon name="x"></lucide-icon>
                 </button>
             </div>
@@ -252,24 +266,29 @@
                     <span>{{ registrationErrorMessage }}</span>
                 </div>
                 <div formArrayName="cameras" class="camera-list">
-                    <div class="camera-block glass-morphism" *ngFor="let camera of cameras.controls; let camIndex=index" [formGroupName]="camIndex">
+                    <div class="camera-block" *ngFor="let camera of cameras.controls; let camIndex=index" [formGroupName]="camIndex">
                         <div class="camera-header">
-                            <div class="device-num">Device #{{ camIndex + 1 }}</div>
+                            <div class="device-num">
+                                <span class="num-badge">{{ camIndex + 1 }}</span>
+                                <span>Device #{{ camIndex + 1 }}</span>
+                            </div>
                             <button *ngIf="cameras.length > 1 && !isEditing" type="button" class="remove-camera-btn"
                                 (click)="removeCamera(camIndex)">
-                                <lucide-icon name="x"></lucide-icon> Remove Device
+                                <lucide-icon name="trash-2"></lucide-icon> Remove
                             </button>
                         </div>
 
+                        <div class="section-label">Connection</div>
                         <div class="management-form">
-                            <div class="form-group full-width">
-                                <label>Hardware Device (Optional)</label>
+                            <div class="form-group">
+                                <label>Camera Company <span class="field-note">(optional)</span></label>
                                 <div class="input-wrapper">
                                     <lucide-icon name="server" class="input-icon"></lucide-icon>
                                     <select formControlName="deviceId" class="custom-select" (change)="onDeviceSelect($event, camIndex)">
-                                        <option value="">Select a Hardware Device</option>
-                                        <option *ngFor="let d of devices" [value]="d.id">{{ d.deviceName }} ({{ d.rtspLink }})</option>
+                                        <option value="">Select a company</option>
+                                        <option *ngFor="let d of devices" [value]="d.id" [title]="d.rtspLink">{{ d.deviceName }}</option>
                                     </select>
+                                    <lucide-icon name="chevron-down" class="select-arrow"></lucide-icon>
                                 </div>
                             </div>
 
@@ -343,8 +362,7 @@
                             </div>
 
                             <div class="form-group">
-                                <label>Username <span *ngIf="isEditing" class="pw-note">(blank = keep
-                                        current)</span></label>
+                                <label>Username <span *ngIf="isEditing" class="field-note">(blank = keep current)</span></label>
                                 <div class="input-wrapper">
                                     <lucide-icon name="user" class="input-icon"></lucide-icon>
                                     <input type="text" formControlName="username" placeholder="admin">
@@ -357,8 +375,7 @@
                             </div>
 
                             <div class="form-group">
-                                <label>Password <span *ngIf="isEditing" class="pw-note">(blank = keep
-                                        current)</span></label>
+                                <label>Password <span *ngIf="isEditing" class="field-note">(blank = keep current)</span></label>
                                 <div class="input-wrapper">
                                     <lucide-icon name="lock" class="input-icon"></lucide-icon>
                                     <input [type]="showPasswords[camIndex] ? 'text' : 'password'" formControlName="password" placeholder="••••••••"
@@ -374,9 +391,12 @@
                                 </div>
                             </div>
 
-                            <div class="form-group checkbox-group">
-                                <label class="toggle-label">
-                                    <span>Active</span>
+                            <div class="form-group full-width">
+                                <label class="status-row">
+                                    <div class="status-text">
+                                        <span class="status-title">Device Status</span>
+                                        <span class="status-hint">{{ camera.get('isActive')?.value ? 'Active: shown on dashboards and health checks' : 'Inactive: hidden from dashboards' }}</span>
+                                    </div>
                                     <div class="toggle-switch">
                                         <input type="checkbox" formControlName="isActive">
                                         <span class="slider"></span>
@@ -387,50 +407,54 @@
 
                         <div class="channels-section" formArrayName="channels">
                             <div class="channels-header">
-                                <h4>Channels</h4>
+                                <div class="section-label">Channels <span class="count-pill">{{ getChannels(camIndex).length }}</span></div>
                                 <button *ngIf="!isEditing" type="button" class="add-channel-btn"
                                     (click)="addChannel(camIndex)">
                                     <lucide-icon name="plus"></lucide-icon> Add Channel
                                 </button>
                             </div>
+
+                            <div class="channel-grid channel-head" aria-hidden="true">
+                                <span>Channel #</span>
+                                <span>Name</span>
+                                <span>Location</span>
+                                <span></span>
+                            </div>
                             <div class="channel-list">
                                 <div *ngFor="let ch of getChannels(camIndex).controls; let chIndex=index; trackBy: trackByIndex"
-                                    [formGroupName]="chIndex" class="channel-row">
-                                    <div class="channel-inputs">
-                                        <div class="form-group">
-                                            <label *ngIf="chIndex === 0">Channel #</label>
-                                            <div class="input-wrapper">
-                                                <input type="text" formControlName="channel" placeholder="1">
-                                            </div>
-                                            <div class="validation-error"
-                                                *ngIf="ch.get('channel')?.invalid && (ch.get('channel')?.dirty || ch.get('channel')?.touched)">
-                                                <span *ngIf="ch.get('channel')?.errors?.['required']">Channel # is
-                                                    required.</span>
-                                            </div>
+                                    [formGroupName]="chIndex" class="channel-grid channel-row">
+                                    <div class="form-group">
+                                        <label class="mobile-label">Channel #</label>
+                                        <div class="input-wrapper">
+                                            <input type="text" formControlName="channel" placeholder="1" aria-label="Channel number">
                                         </div>
-                                        <div class="form-group">
-                                            <label *ngIf="chIndex === 0">Name</label>
-                                            <div class="input-wrapper">
-                                                <input type="text" formControlName="name"
-                                                    placeholder="e.g. Main Entrance">
-                                            </div>
-                                            <div class="validation-error"
-                                                *ngIf="ch.get('name')?.invalid && (ch.get('name')?.dirty || ch.get('name')?.touched)">
-                                                <span *ngIf="ch.get('name')?.errors?.['required']">Name is
-                                                    required.</span>
-                                            </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label *ngIf="chIndex === 0">Location</label>
-                                            <div class="input-wrapper">
-                                                <input type="text" formControlName="location" placeholder="e.g. Gate A">
-                                            </div>
+                                        <div class="validation-error"
+                                            *ngIf="ch.get('channel')?.invalid && (ch.get('channel')?.dirty || ch.get('channel')?.touched)">
+                                            <span *ngIf="ch.get('channel')?.errors?.['required']">Required.</span>
                                         </div>
                                     </div>
-                                    <button *ngIf="getChannels(camIndex).length > 1 && !isEditing" type="button"
-                                        class="remove-ch-btn" (click)="removeChannel(camIndex, chIndex)">
-                                        <lucide-icon name="x"></lucide-icon>
-                                    </button>
+                                    <div class="form-group">
+                                        <label class="mobile-label">Name</label>
+                                        <div class="input-wrapper">
+                                            <input type="text" formControlName="name" placeholder="e.g. Main Entrance" aria-label="Camera name">
+                                        </div>
+                                        <div class="validation-error"
+                                            *ngIf="ch.get('name')?.invalid && (ch.get('name')?.dirty || ch.get('name')?.touched)">
+                                            <span *ngIf="ch.get('name')?.errors?.['required']">Name is required.</span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="mobile-label">Location</label>
+                                        <div class="input-wrapper">
+                                            <input type="text" formControlName="location" placeholder="e.g. Gate A" aria-label="Location">
+                                        </div>
+                                    </div>
+                                    <div class="channel-action">
+                                        <button *ngIf="getChannels(camIndex).length > 1 && !isEditing" type="button"
+                                            class="remove-ch-btn" title="Remove channel" (click)="removeChannel(camIndex, chIndex)">
+                                            <lucide-icon name="x"></lucide-icon>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>

@@ -45,6 +45,7 @@ export class AccessControlComponent implements OnInit, OnDestroy, AfterViewInit 
         { id: 'users', label: 'User Management', icon: 'users' },
         { id: 'colleges', label: 'Colleges', icon: 'building-2' },
         { id: 'add-camera', label: 'Camera Setup', icon: 'video' },
+        { id: 'connection-status', label: 'Connection Status', icon: 'network' },
         { id: 'screenshots', label: 'Screenshots', icon: 'image' }
     ];
 
