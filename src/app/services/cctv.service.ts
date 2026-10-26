@@ -71,6 +71,108 @@ export interface Device {
     updatedAt?: string;
 }
 
+export type CollegeHealthStatus = 'working' | 'partial' | 'down' | 'pending' | 'no_cameras' | 'inactive';
+export type CameraHealthStatus = 'online' | 'stream_error' | 'no_response' | 'offline' | 'pending' | 'disabled';
+
+export interface CameraConnectivity {
+    id: string;
+    collegeId: string;
+    collegeName: string;
+    name: string;
+    location?: string;
+    ipAddress: string;
+    rtspPort: number;
+    channel: string;
+    deviceName?: string;
+    isActive: boolean;
+    status: CameraHealthStatus;
+    lastResult: string | null;
+    unconfirmedFailure: boolean;
+    rtspCode: number | null;
+    latencyMs: number | null;
+    error: string | null;
+    lastCheckedAt: string | null;
+    lastOnlineAt: string | null;
+    statusSince: string | null;
+    uptime: number | null;
+    outages: number;
+}
+
+export interface CollegeConnectivity {
+    id: string;
+    name: string;
+    address?: string;
+    contactEmail?: string;
+    isActive: boolean;
+    status: CollegeHealthStatus;
+    totalCameras: number;
+    activeCameras: number;
+    online: number;
+    streamError: number;
+    noResponse: number;
+    offline: number;
+    notWorking: number;
+    pending: number;
+    disabled: number;
+    health: number | null;
+    uptime: number | null;
+    outages: number;
+    downSince: string | null;
+    oldestCheckAt: string | null;
+    latestCheckAt: string | null;
+}
+
+export interface ConnectivityJob {
+    id: string;
+    type: 'full' | 'college' | 'scheduled';
+    collegeId: string | null;
+    collegeName: string | null;
+    state: 'queued' | 'running' | 'finished' | 'failed';
+    total: number;
+    done: number;
+    startedAt: string | null;
+    finishedAt: string | null;
+    error: string | null;
+}
+
+export interface ConnectivityJobs {
+    current: ConnectivityJob | null;
+    queued: ConnectivityJob | null;
+    lastManual: ConnectivityJob | null;
+}
+
+export interface ConnectivitySummary {
+    colleges: number;
+    working: number;
+    partial: number;
+    down: number;
+    pending: number;
+    noCameras: number;
+    inactive: number;
+    cameras: number;
+    online: number;
+    streamError: number;
+    noResponse: number;
+    offline: number;
+    notWorking: number;
+    pendingCameras: number;
+    disabled: number;
+    uptime: number | null;
+    oldestCheckAt: string | null;
+    latestCheckAt: string | null;
+    days: number;
+    monitor: { enabled: boolean; intervalMin: number; failingIntervalMin: number; failThreshold: number };
+    jobs: ConnectivityJobs;
+}
+
+export interface ConnectivityQuery {
+    days: number;
+    status?: string;
+    search?: string;
+    sort?: string;
+    collegeId?: string;
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -341,6 +443,15 @@ export class CctvService {
         });
     }
 
+    downloadCameraAnalyticsReport(collegeId: string = ''): Observable<any> {
+        const params: any = {};
+        if (collegeId) params.collegeId = collegeId;
+        return this.http.get(`${this.apiUrl}/cameras/analytics-report`, {
+            params,
+            responseType: 'blob'
+        });
+    }
+
     bulkUpdateCameras(formData: FormData): Observable<any> {
         return this.http.post(`${this.apiUrl}/cameras/bulk-update`, formData, this.getHeaders());
     }
@@ -427,5 +538,31 @@ export class CctvService {
 
     deleteDevice(id: string): Observable<any> {
         return this.http.delete(`${this.apiUrl}/devices/${id}`, this.getHeaders());
+    }
+
+    // Connection Status
+    getConnectivitySummary(days: number): Observable<ConnectivitySummary> {
+        return this.http.get<ConnectivitySummary>(`${this.apiUrl}/connectivity/summary`, { ...this.getHeaders(), params: { days } });
+    }
+
+    getConnectivityColleges(query: ConnectivityQuery, page: number, limit: number): Observable<PaginatedResponse<CollegeConnectivity>> {
+        const params: any = { ...query, page, limit };
+        return this.http.get<PaginatedResponse<CollegeConnectivity>>(`${this.apiUrl}/connectivity/colleges`, { ...this.getHeaders(), params });
+    }
+
+    getCollegeCameraConnectivity(collegeId: string, days: number): Observable<CameraConnectivity[]> {
+        return this.http.get<CameraConnectivity[]>(`${this.apiUrl}/connectivity/colleges/${collegeId}/cameras`, { ...this.getHeaders(), params: { days } });
+    }
+
+    getConnectivityJobs(): Observable<ConnectivityJobs> {
+        return this.http.get<ConnectivityJobs>(`${this.apiUrl}/connectivity/job`, this.getHeaders());
+    }
+
+    startConnectivityCheck(collegeId?: string): Observable<{ started: boolean; job: ConnectivityJob }> {
+        return this.http.post<{ started: boolean; job: ConnectivityJob }>(`${this.apiUrl}/connectivity/recheck`, collegeId ? { collegeId } : {}, this.getHeaders());
+    }
+
+    downloadConnectivityReport(format: 'excel' | 'pdf', query: ConnectivityQuery): Observable<Blob> {
+        return this.http.get(`${this.apiUrl}/connectivity/export/${format}`, { params: { ...query }, responseType: 'blob' });
     }
 }

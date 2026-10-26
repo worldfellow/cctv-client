@@ -41,6 +41,11 @@
                 <i data-lucide="shield"></i>
                 <span>Access Control</span>
             </a>
+            <a *ngIf="hasMenuAccess(user, 'connection-status')" routerLink="/connection-status" routerLinkActive="active"
+                class="nav-item" (click)="onNavClick()" [attr.data-tooltip]="!isSidebarOpen ? 'Connection Status' : null">
+                <i data-lucide="activity"></i>
+                <span>Connection Status</span>
+            </a>
             <a *ngIf="hasMenuAccess(user, 'screenshots')" routerLink="/screenshots" routerLinkActive="active"
                 class="nav-item" (click)="onNavClick()" [attr.data-tooltip]="!isSidebarOpen ? 'Screenshots' : null">
                 <i data-lucide="image"></i>

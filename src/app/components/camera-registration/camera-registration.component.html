@@ -49,6 +49,12 @@
                 <span class="tooltip-text">Bulk Edit Camera Details</span>
             </button>
 
+            <button type="button" class="btn-secondary tooltip" (click)="downloadAnalyticsReport()">
+                <lucide-icon name="file-text"></lucide-icon>
+                <span>Analytics Report</span>
+                <span class="tooltip-text">Download Camera Analytics Report (Excel)</span>
+            </button>
+
             <button *ngIf="hasActionAccess('camera_create')" type="button" class="add-btn" (click)="openModal(false)">
                 <lucide-icon name="plus"></lucide-icon>
                 <span>Add Camera</span>
