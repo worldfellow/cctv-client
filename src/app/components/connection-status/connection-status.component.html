@@ -1,0 +1,243 @@
+<div class="connection-status-container">
+    <div class="header-section">
+        <div class="title-info">
+            <h1 class="gradient-text">Connection Status</h1>
+            <p class="subtitle">
+                Cameras are checked automatically in the background
+                <ng-container *ngIf="summary?.monitor as monitor">
+                    (every {{ monitor.intervalMin }} min, failing cameras every {{ monitor.failingIntervalMin }} min)
+                </ng-container>
+                <span *ngIf="summary?.latestCheckAt" class="checked-at">&middot; Last check {{ timeSince(summary!.latestCheckAt) }} ago</span>
+            </p>
+        </div>
+        <div class="actions">
+            <button class="secondary-btn" (click)="download('excel')" [disabled]="!summary || isExporting('excel')">
+                <lucide-icon [name]="isExporting('excel') ? 'loader-2' : 'download'" [class.spin]="isExporting('excel')"></lucide-icon>
+                <span>Excel</span>
+            </button>
+            <button class="secondary-btn" (click)="download('pdf')" [disabled]="!summary || isExporting('pdf')">
+                <lucide-icon [name]="isExporting('pdf') ? 'loader-2' : 'file-text'" [class.spin]="isExporting('pdf')"></lucide-icon>
+                <span>PDF</span>
+            </button>
+            <button class="add-btn" (click)="recheck()" [disabled]="!!activeJob">
+                <lucide-icon [name]="activeJob ? 'loader-2' : 'rotate-ccw'" [class.spin]="!!activeJob"></lucide-icon>
+                <span>{{ activeJob ? 'Checking...' : 'Re-check All' }}</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="monitor-off glass-morphism" *ngIf="summary && !summary.monitor.enabled">
+        <lucide-icon name="alert-triangle"></lucide-icon>
+        Background checking is turned off on the server (HEALTH_CHECK_ENABLED=false). Results only update when you re-check manually.
+    </div>
+
+    <!-- Manual check progress -->
+    <div class="job-card glass-morphism" *ngIf="activeJob">
+        <div class="job-text">
+            <lucide-icon name="loader-2" class="spin"></lucide-icon>
+            <span *ngIf="activeJob.state === 'queued'">Check queued, starting in a few seconds...</span>
+            <span *ngIf="activeJob.state === 'running'">
+                Checking {{ activeJob.type === 'college' ? activeJob.collegeName : 'all colleges' }}:
+                <strong>{{ activeJob.done }} / {{ activeJob.total }}</strong> cameras checked
+            </span>
+        </div>
+        <div class="job-bar"><div class="job-fill" [style.width.%]="jobProgress"></div></div>
+    </div>
+
+    <!-- Summary -->
+    <div class="summary-grid" *ngIf="summary">
+        <div class="stat-card glass-morphism">
+            <span class="stat-label">Colleges</span>
+            <span class="stat-value">{{ summary.colleges }}</span>
+        </div>
+        <div class="stat-card glass-morphism working">
+            <span class="stat-label">Working</span>
+            <span class="stat-value">{{ summary.working }}</span>
+        </div>
+        <div class="stat-card glass-morphism partial">
+            <span class="stat-label">Partially Working</span>
+            <span class="stat-value">{{ summary.partial }}</span>
+        </div>
+        <div class="stat-card glass-morphism down">
+            <span class="stat-label">Not Working</span>
+            <span class="stat-value">{{ summary.down }}</span>
+        </div>
+        <div class="stat-card glass-morphism">
+            <span class="stat-label">Cameras Online</span>
+            <span class="stat-value">{{ summary.online }} <small>/ {{ summary.cameras - summary.disabled }}</small></span>
+        </div>
+        <div class="stat-card glass-morphism down">
+            <span class="stat-label">Cameras Not Working</span>
+            <span class="stat-value">{{ summary.notWorking }}</span>
+        </div>
+        <div class="stat-card glass-morphism">
+            <span class="stat-label">Avg Uptime ({{ days }}d)</span>
+            <span class="stat-value">{{ summary.uptime !== null ? summary.uptime + '%' : '-' }}</span>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-bar" *ngIf="summary">
+        <div class="filter-tabs">
+            <button [class.active]="statusFilter === 'all'" (click)="setStatusFilter('all')">All <span>{{ countFor('all') }}</span></button>
+            <button [class.active]="statusFilter === 'working'" (click)="setStatusFilter('working')">Working <span>{{ countFor('working') }}</span></button>
+            <button [class.active]="statusFilter === 'partial'" (click)="setStatusFilter('partial')">Partial <span>{{ countFor('partial') }}</span></button>
+            <button [class.active]="statusFilter === 'down'" (click)="setStatusFilter('down')">Not Working <span>{{ countFor('down') }}</span></button>
+            <button [class.active]="statusFilter === 'other'" (click)="setStatusFilter('other')">Other <span>{{ countFor('other') }}</span></button>
+        </div>
+        <div class="filter-controls">
+            <select [(ngModel)]="sort" (change)="onSortChange()" title="Sort by">
+                <option value="status">Worst first</option>
+                <option value="uptime">Lowest uptime</option>
+                <option value="outages">Most outages</option>
+                <option value="name">Name (A-Z)</option>
+            </select>
+            <select [(ngModel)]="days" (change)="onDaysChange()" title="Uptime window">
+                <option [ngValue]="1">Last 24 hours</option>
+                <option [ngValue]="7">Last 7 days</option>
+                <option [ngValue]="30">Last 30 days</option>
+                <option [ngValue]="90">Last 90 days</option>
+            </select>
+            <div class="search-box">
+                <lucide-icon name="search"></lucide-icon>
+                <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="onSearch($event)" placeholder="Search college...">
+            </div>
+        </div>
+    </div>
+
+    <!-- College Table -->
+    <div class="table-card glass-morphism">
+        <div class="table-container">
+            <table class="conn-table">
+                <thead>
+                    <tr>
+                        <th class="expand-col"></th>
+                        <th class="col-college">College</th>
+                        <th class="col-status">Status</th>
+                        <th class="col-cameras">Cameras</th>
+                        <th class="col-uptime">Uptime ({{ days }}d)</th>
+                        <th class="col-outages">Outages</th>
+                        <th class="col-actions"></th>
+                    </tr>
+                </thead>
+                <tbody [class.loading-fade]="isLoading">
+                    <ng-container *ngFor="let college of colleges">
+                        <tr class="college-row" (click)="toggleExpand(college.id)" [class.expanded]="expanded.has(college.id)">
+                            <td class="expand-col">
+                                <lucide-icon [name]="expanded.has(college.id) ? 'chevron-down' : 'chevron-right'"></lucide-icon>
+                            </td>
+                            <td class="col-college">
+                                <span class="college-name">{{ college.name }}</span>
+                                <span *ngIf="college.downSince" class="down-since">Not working for {{ timeSince(college.downSince) }}</span>
+                                <span class="sub-line">Checked {{ college.latestCheckAt ? timeSince(college.latestCheckAt) + ' ago' : 'never' }}</span>
+                            </td>
+                            <td class="col-status" data-label="Status">
+                                <span class="status-pill" [ngClass]="college.status">{{ collegeStatusLabels[college.status] }}</span>
+                                <div class="health" *ngIf="college.health !== null">
+                                    <div class="health-bar"><div class="health-fill" [ngClass]="college.status" [style.width.%]="college.health"></div></div>
+                                    <span>{{ college.health }}%</span>
+                                </div>
+                            </td>
+                            <td class="col-cameras" data-label="Cameras">
+                                <span><span class="ok-text">{{ college.online }}</span> / {{ college.activeCameras }} online</span>
+                                <span *ngIf="college.notWorking" class="sub-line bad-text">{{ college.notWorking }} not working</span>
+                                <span *ngIf="college.pending" class="sub-line">{{ college.pending }} not checked</span>
+                                <span *ngIf="college.disabled" class="sub-line">{{ college.disabled }} disabled</span>
+                            </td>
+                            <td class="col-uptime" [attr.data-label]="'Uptime (' + days + 'd)'" [ngClass]="uptimeClass(college.uptime)">{{ college.uptime !== null ? college.uptime + '%' : '-' }}</td>
+                            <td class="col-outages" [attr.data-label]="'Outages (' + days + 'd)'" [class.warn-text]="college.outages > 0">{{ college.outages }}</td>
+                            <td class="col-actions">
+                                <div class="row-actions">
+                                    <button class="row-btn" title="Download Excel for this college" (click)="download('excel', college, $event)"
+                                        [disabled]="isExporting('excel', college)">
+                                        <lucide-icon [name]="isExporting('excel', college) ? 'loader-2' : 'download'" [class.spin]="isExporting('excel', college)"></lucide-icon>
+                                    </button>
+                                    <button class="row-btn" title="Download PDF for this college" (click)="download('pdf', college, $event)"
+                                        [disabled]="isExporting('pdf', college)">
+                                        <lucide-icon [name]="isExporting('pdf', college) ? 'loader-2' : 'file-text'" [class.spin]="isExporting('pdf', college)"></lucide-icon>
+                                    </button>
+                                    <button class="row-btn" title="Re-check this college" (click)="recheck(college, $event)"
+                                        [disabled]="!!activeJob || !college.activeCameras">
+                                        <lucide-icon name="rotate-ccw" [class.spin]="isCheckingCollege(college.id)"></lucide-icon>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr *ngIf="expanded.has(college.id)" class="detail-row">
+                            <td colspan="7">
+                                <div *ngIf="loadingCameras.has(college.id) && !cameras.has(college.id)" class="muted empty-cameras">Loading cameras...</div>
+                                <ng-container *ngIf="cameras.get(college.id) as list">
+                                    <div *ngIf="list.length === 0" class="muted empty-cameras">No cameras registered for this college.</div>
+                                    <table *ngIf="list.length > 0" class="camera-table">
+                                        <thead>
+                                            <tr>
+                                                <th class="cam-name">Camera</th>
+                                                <th class="cam-address">Address</th>
+                                                <th class="cam-status">Status</th>
+                                                <th class="cam-uptime">Uptime</th>
+                                                <th class="cam-checked">Checked</th>
+                                                <th class="cam-details">Details</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr *ngFor="let camera of list">
+                                                <td class="cam-name">
+                                                    <span class="camera-name">{{ camera.name }}</span>
+                                                    <span class="sub-line">{{ camera.location || '-' }}</span>
+                                                </td>
+                                                <td class="cam-address" data-label="Address">
+                                                    <code>{{ camera.ipAddress }}:<wbr>{{ camera.rtspPort }}</code>
+                                                    <span class="sub-line">{{ camera.deviceName || '-' }}</span>
+                                                </td>
+                                                <td class="cam-status" data-label="Status">
+                                                    <span class="status-pill" [ngClass]="camera.status">{{ cameraStatusLabels[camera.status] }}</span>
+                                                    <lucide-icon *ngIf="camera.unconfirmedFailure" name="alert-triangle" class="warn-text unconfirmed" title="Last check failed, confirming"></lucide-icon>
+                                                    <span *ngIf="camera.status !== 'disabled' && camera.statusSince" class="sub-line">for {{ timeSince(camera.statusSince) }}</span>
+                                                </td>
+                                                <td class="cam-uptime" data-label="Uptime" [ngClass]="uptimeClass(camera.uptime)">{{ camera.uptime !== null && camera.status !== 'disabled' ? camera.uptime + '%' : '-' }}</td>
+                                                <td class="cam-checked" data-label="Checked">
+                                                    <span>{{ camera.lastCheckedAt ? timeSince(camera.lastCheckedAt) + ' ago' : '-' }}<ng-container *ngIf="camera.latencyMs !== null"> &middot; {{ camera.latencyMs }} ms</ng-container></span>
+                                                    <span class="sub-line">Last online {{ camera.lastOnlineAt ? (camera.lastOnlineAt | date:'dd MMM, HH:mm') : '-' }}</span>
+                                                </td>
+                                                <td class="cam-details muted" data-label="Details">{{ cameraDetails(camera) || '-' }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </ng-container>
+                            </td>
+                        </tr>
+                    </ng-container>
+                    <tr *ngIf="!isLoading && colleges.length === 0">
+                        <td colspan="7" class="empty-state">No colleges match this filter.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pagination-footer" *ngIf="total > 0">
+            <div class="page-size-selector">
+                <span>Per page:</span>
+                <select [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+                    <option [ngValue]="10">10</option>
+                    <option [ngValue]="20">20</option>
+                    <option [ngValue]="50">50</option>
+                    <option [ngValue]="100">100</option>
+                </select>
+            </div>
+            <div class="pagination-info">
+                Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ currentPage * pageSize > total ? total : currentPage * pageSize }} of {{ total }}
+            </div>
+            <div class="pagination-controls">
+                <button class="page-btn" (click)="prevPage()" [disabled]="currentPage === 1">
+                    <lucide-icon name="chevron-left"></lucide-icon>
+                    <span>Previous</span>
+                </button>
+                <span class="current-page">Page {{ currentPage }} of {{ totalPages }}</span>
+                <button class="page-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">
+                    <span>Next</span>
+                    <lucide-icon name="chevron-right"></lucide-icon>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
