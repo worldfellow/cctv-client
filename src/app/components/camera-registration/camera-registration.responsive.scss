@@ -120,18 +120,49 @@
         gap: 1rem;
     }
 
-    /* Channel Row */
-    .channel-row {
-        flex-direction: column;
-        gap: 0.5rem;
+    /* Registration form: single column */
+    .modal-header .modal-subtitle {
+        display: none;
+    }
 
-        .channel-inputs {
-            grid-template-columns: 1fr !important;
-            gap: 0.75rem;
+    /* Selectors carry an extra class: this file is loaded before the component's own rules */
+    .camera-list .camera-block {
+        padding: 1.1rem;
+    }
+
+    .camera-block .management-form {
+        grid-template-columns: 1fr;
+    }
+
+    /* Channels: stacked fields, each with its own label */
+    .channel-grid.channel-head {
+        display: none;
+    }
+
+    .channel-list {
+        gap: 1rem;
+    }
+
+    .channel-grid.channel-row {
+        grid-template-columns: 1fr;
+        padding-bottom: 1rem;
+        border-bottom: 1px dashed var(--card-border);
+
+        &:last-child {
+            padding-bottom: 0;
+            border-bottom: none;
         }
 
-        .remove-ch-btn {
-            align-self: flex-end;
+        .form-group .mobile-label {
+            display: block;
+        }
+
+        .channel-action {
+            justify-content: flex-end;
+
+            &:empty {
+                display: none;
+            }
         }
     }
 
