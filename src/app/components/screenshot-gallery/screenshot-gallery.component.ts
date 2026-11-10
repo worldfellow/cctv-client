@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CctvService } from '../../services/cctv.service';
+import { collegeLabel } from '../../utils/college-label';
 import { IconService } from '../../services/icon.service';
 import { Subject } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
@@ -34,6 +35,7 @@ export class ScreenshotGalleryComponent implements OnInit, OnDestroy, AfterViewI
     filterCameraName: string = '';
 
     colleges: any[] = [];
+    collegeLabel = collegeLabel;
     selectedScreenshot: any | null = null;
     serverBaseUrl: string = environment.apiUrl;
     protected Math = Math;

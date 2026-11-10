@@ -27,7 +27,7 @@
                         <div class="option" *ngFor="let college of filteredCollegesFilter; trackBy: trackByCollegeId"
                             (click)="selectFilterCollege(college.id)"
                             [class.selected]="selectedFilterCollege === college.id">
-                            {{ college.name }}
+                            {{ collegeLabel(college) }}
                         </div>
                         <div class="no-results" *ngIf="filteredCollegesFilter.length === 0">
                             No colleges found
@@ -151,7 +151,7 @@
                             </div>
                         </td>
                         <td data-label="College">
-                            <span class="college-info">{{ record.collegeName || 'N/A' }}</span>
+                            <span class="college-info">{{ recordCollegeLabel(record) }}</span>
                         </td>
                         <td data-label="Channel">
                             <div class="channel-badge">
@@ -315,7 +315,7 @@
                                                 *ngFor="let college of filteredCollegesModal; trackBy: trackByCollegeId"
                                                 (click)="selectModalCollege(camIndex, college)"
                                                 [class.selected]="camera.get('collegeId')?.value === college.id">
-                                                {{ college.name }}
+                                                {{ collegeLabel(college) }}
                                             </div>
                                             <div class="no-results" *ngIf="filteredCollegesModal.length === 0">
                                                 No colleges found

@@ -2,6 +2,7 @@ import { Component, OnInit, AfterViewInit, OnDestroy, HostListener } from '@angu
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CctvService, User } from '../../services/cctv.service';
+import { collegeLabel } from '../../utils/college-label';
 import { ToastService } from '../../services/toast.service';
 import { ConfirmModalComponent } from '../shared/confirm-modal/confirm-modal.component';
 import { IconService } from '../../services/icon.service';
@@ -24,6 +25,7 @@ import {
 export class UserManagementComponent implements OnInit, AfterViewInit, OnDestroy {
   users: User[] = [];
   colleges: any[] = [];
+  collegeLabel = collegeLabel;
   roles: any[] = [];
   isLoading: boolean = false;
   isAddingNewRole: boolean = false;
@@ -159,7 +161,7 @@ export class UserManagementComponent implements OnInit, AfterViewInit, OnDestroy
   get filteredColleges(): any[] {
     if (!this.collegeSearch) return this.colleges;
     return this.colleges.filter(c =>
-      c.name.toLowerCase().includes(this.collegeSearch.toLowerCase())
+      collegeLabel(c).toLowerCase().includes(this.collegeSearch.toLowerCase())
     );
   }
 
@@ -181,7 +183,7 @@ export class UserManagementComponent implements OnInit, AfterViewInit, OnDestroy
   get selectedCollegeName(): string {
     if (this.currentUser.collegeId === 'ALL') return 'All Colleges';
     const college = this.colleges.find(c => c.id === this.currentUser.collegeId);
-    return college ? college.name : 'Select College';
+    return college ? collegeLabel(college) : 'Select College';
   }
 
   // Close dropdown on outside click

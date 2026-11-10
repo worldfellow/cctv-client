@@ -127,7 +127,7 @@
                                 <lucide-icon [name]="expanded.has(college.id) ? 'chevron-down' : 'chevron-right'"></lucide-icon>
                             </td>
                             <td class="col-college">
-                                <span class="college-name">{{ college.name }}</span>
+                                <span class="college-name">{{ collegeLabel(college) }}</span>
                                 <span *ngIf="college.downSince" class="down-since">Not working for {{ timeSince(college.downSince) }}</span>
                                 <span class="sub-line">Checked {{ college.latestCheckAt ? timeSince(college.latestCheckAt) + ' ago' : 'never' }}</span>
                             </td>

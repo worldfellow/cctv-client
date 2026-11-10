@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CctvService, User, College } from '../../services/cctv.service';
+import { collegeLabel } from '../../utils/college-label';
 import { ToastService } from '../../services/toast.service';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
@@ -19,6 +20,7 @@ import { IconService } from '../../services/icon.service';
 export class AccessControlComponent implements OnInit, OnDestroy, AfterViewInit {
     users: User[] = [];
     colleges: College[] = [];
+    collegeLabel = collegeLabel;
     isSaving: boolean = false;
     isLoadingUsers: boolean = false;
 
@@ -185,7 +187,7 @@ export class AccessControlComponent implements OnInit, OnDestroy, AfterViewInit 
     get filteredColleges(): College[] {
         if (!this.collegeSearchQuery) return this.colleges;
         const query = this.collegeSearchQuery.toLowerCase();
-        return this.colleges.filter(c => c.name.toLowerCase().includes(query));
+        return this.colleges.filter(c => collegeLabel(c).toLowerCase().includes(query));
     }
 
     onSearch(): void {

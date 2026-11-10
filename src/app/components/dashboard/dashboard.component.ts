@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { CctvCardComponent, CctvFeed } from '../cctv-card/cctv-card.component';
 import { CctvViewerComponent } from '../cctv-viewer/cctv-viewer.component';
 import { CctvService, College } from '../../services/cctv.service';
+import { collegeLabel } from '../../utils/college-label';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
@@ -32,10 +33,12 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   stats: { total: number; active: number; offline: number } = { total: 0, active: 0, offline: 0 };
 
   colleges: College[] = [];
+  collegeLabel = collegeLabel;
   filteredColleges: College[] = [];
   collegeSearchQuery: string = '';
   showCollegeDropdown: boolean = false;
   selectedCollegeName: string = 'Select College';
+  selectedCollegeLabel: string = 'Select College';
 
   private destroy$ = new Subject<void>();
 
@@ -87,6 +90,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
           const selected = this.colleges.find(c => c.id === this.selectedCollegeId);
           if (selected) {
             this.selectedCollegeName = selected.name;
+            this.selectedCollegeLabel = collegeLabel(selected);
             this.loadStats(); // Load stats if college already selected
           }
         }
@@ -117,7 +121,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     } else {
       const query = this.collegeSearchQuery.toLowerCase();
       this.filteredColleges = this.colleges.filter(c =>
-        c.name.toLowerCase().includes(query)
+        collegeLabel(c).toLowerCase().includes(query)
       );
     }
   }
@@ -125,6 +129,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   selectCollege(college: College): void {
     this.selectedCollegeId = college.id;
     this.selectedCollegeName = college.name;
+    this.selectedCollegeLabel = collegeLabel(college);
     this.showCollegeDropdown = false;
     this.collegeSearchQuery = '';
     this.filteredColleges = this.colleges;
