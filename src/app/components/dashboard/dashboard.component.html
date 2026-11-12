@@ -13,7 +13,7 @@
                     <div class="dropdown-trigger" (click)="toggleCollegeDropdown(); $event.stopPropagation()"
                         [class.active]="showCollegeDropdown">
                         <i data-lucide="building-2"></i>
-                        <span>{{ selectedCollegeName }}</span>
+                        <span>{{ selectedCollegeLabel }}</span>
                         <i data-lucide="chevron-down" class="arrow"></i>
                     </div>
 
@@ -27,7 +27,7 @@
                         <div class="options-list">
                             <div class="option" *ngFor="let college of filteredColleges; trackBy: trackByCollegeId"
                                 [class.selected]="college.id === selectedCollegeId" (click)="selectCollege(college)">
-                                {{ college.name }}
+                                {{ collegeLabel(college) }}
                             </div>
                             <div class="no-results" *ngIf="filteredColleges.length === 0">
                                 No colleges found

@@ -2,6 +2,7 @@ import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef } fr
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CctvService, College } from '../../services/cctv.service';
+import { collegeLabel } from '../../utils/college-label';
 import { ToastService } from '../../services/toast.service';
 import { ConfirmModalComponent } from '../shared/confirm-modal/confirm-modal.component';
 import { IconService } from '../../services/icon.service';
@@ -17,6 +18,7 @@ import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 })
 export class CollegeManagementComponent implements OnInit, AfterViewInit, OnDestroy {
   colleges: College[] = [];
+  collegeLabel = collegeLabel;
   isLoading: boolean = false;
   showModal: boolean = false;
   isEditing: boolean = false;

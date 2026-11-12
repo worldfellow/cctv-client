@@ -185,7 +185,7 @@
                                             <lucide-icon
                                                 [name]="isCollegeSelected(college.id) ? 'check-circle' : 'circle'"></lucide-icon>
                                         </div>
-                                        <span>{{ college.name }}</span>
+                                        <span>{{ collegeLabel(college) }}</span>
                                     </div>
                                     <div *ngIf="filteredColleges.length === 0" class="no-colleges">
                                         No colleges found matching "{{ collegeSearchQuery }}"

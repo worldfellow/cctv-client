@@ -8,6 +8,7 @@ import {
   CameraConnectivity, CctvService, CollegeConnectivity, ConnectivityJob, ConnectivityQuery, ConnectivitySummary
 } from '../../services/cctv.service';
 import { ToastService } from '../../services/toast.service';
+import { collegeLabel } from '../../utils/college-label';
 
 type StatusFilter = 'all' | 'working' | 'partial' | 'down' | 'other';
 
@@ -21,6 +22,7 @@ type StatusFilter = 'all' | 'working' | 'partial' | 'down' | 'other';
 export class ConnectionStatusComponent implements OnInit, OnDestroy {
   summary: ConnectivitySummary | null = null;
   colleges: CollegeConnectivity[] = [];
+  collegeLabel = collegeLabel;
   isLoading = false;
   // Downloads in progress: 'excel' / 'pdf' for the whole list, '<collegeId>:<format>' per college
   exportingKeys = new Set<string>();
