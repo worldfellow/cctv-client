@@ -106,7 +106,7 @@
                         </td>
                         <td data-label="College">
                             <span class="college-info">{{ (user.allowedColleges && user.allowedColleges.includes('ALL'))
-                                ? 'All Colleges' : (user.College?.name || 'N/A') }}</span>
+                                ? 'All Colleges' : (user.College ? collegeLabel(user.College) : 'N/A') }}</span>
                         </td>
                         <td data-label="Status">
                             <label class="status-toggle"
@@ -347,7 +347,7 @@
                                         *ngFor="let college of filteredColleges; trackBy: trackByCollegeId"
                                         (click)="selectCollege(college)"
                                         [class.selected]="currentUser.collegeId === college.id">
-                                        {{ college.name }}
+                                        {{ collegeLabel(college) }}
                                     </div>
                                     <div class="no-results" *ngIf="filteredColleges.length === 0">
                                         No colleges found

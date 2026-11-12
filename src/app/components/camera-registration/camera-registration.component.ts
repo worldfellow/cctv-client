@@ -2,6 +2,7 @@ import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, HostListener, 
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CctvService, College } from '../../services/cctv.service';
+import { collegeLabel } from '../../utils/college-label';
 import { ToastService } from '../../services/toast.service';
 import { ConfirmModalComponent } from '../shared/confirm-modal/confirm-modal.component';
 import { IconService } from '../../services/icon.service';
@@ -20,6 +21,7 @@ export interface CameraRecord {
     isActive: boolean;
     status?: string;
     collegeName?: string;
+    collegeAddress?: string;
     streamUrl?: string;
     username?: string;
     password?: string;
@@ -54,6 +56,7 @@ export interface CameraDevice {
 export class CameraRegistrationComponent implements OnInit, OnDestroy, AfterViewInit {
     registrationForm!: FormGroup;
     colleges: College[] = [];
+    collegeLabel = collegeLabel;
     devices: any[] = [];
 
     // Table & Data State
@@ -229,17 +232,24 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy, AfterView
         });
     }
 
+    // Table label: "Name, Location" from the loaded college list, falling back to the plain name
+    recordCollegeLabel(record: any): string {
+        const college = this.colleges.find(c => c.id === record.collegeId);
+        if (college) return collegeLabel(college);
+        return record.collegeName ? collegeLabel({ name: record.collegeName, address: record.collegeAddress }) : 'N/A';
+    }
+
     get filteredCollegesFilter(): College[] {
         if (!this.filterSearch) return this.colleges;
         return this.colleges.filter(c =>
-            c.name.toLowerCase().includes(this.filterSearch.toLowerCase())
+            collegeLabel(c).toLowerCase().includes(this.filterSearch.toLowerCase())
         );
     }
 
     get filteredCollegesModal(): College[] {
         if (!this.modalSearch) return this.colleges;
         return this.colleges.filter(c =>
-            c.name.toLowerCase().includes(this.modalSearch.toLowerCase())
+            collegeLabel(c).toLowerCase().includes(this.modalSearch.toLowerCase())
         );
     }
 
@@ -259,7 +269,7 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy, AfterView
     get selectedFilterCollegeName(): string {
         if (!this.selectedFilterCollege) return 'All Colleges';
         const college = this.colleges.find(c => c.id === this.selectedFilterCollege);
-        return college ? college.name : 'All Colleges';
+        return college ? collegeLabel(college) : 'All Colleges';
     }
 
     toggleModalDropdown(event: Event, index: number): void {
@@ -278,7 +288,7 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy, AfterView
     getSelectedCollegeNameModal(index: number): string {
         const id = this.cameras.at(index).get('collegeId')?.value;
         const college = this.colleges.find(c => c.id === id);
-        return college ? college.name : 'Select a college';
+        return college ? collegeLabel(college) : 'Select a college';
     }
 
     loadCameras(): void {
@@ -297,6 +307,7 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy, AfterView
                     isActive: cam.status === 'online',
                     status: cam.status || 'offline',
                     collegeName: cam.collegeName,
+                    collegeAddress: cam.collegeAddress,
                     streamUrl: cam.streamUrl,
                     username: cam.username,
                     password: cam.password,
@@ -361,6 +372,7 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy, AfterView
                     isActive: cam.status === 'online',
                     status: cam.status,
                     collegeName: cam.collegeName,
+                    collegeAddress: cam.collegeAddress,
                     streamUrl: cam.streamUrl,
                     username: cam.username,
                     password: cam.password

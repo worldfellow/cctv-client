@@ -12,7 +12,7 @@
             <select [(ngModel)]="filterCollege" (change)="filterScreenshots()">
                 <option value="">All Colleges</option>
                 <option *ngFor="let college of colleges; trackBy: trackByCollegeName" [value]="college.name">{{
-                    college.name }}</option>
+                    collegeLabel(college) }}</option>
             </select>
         </div>
 
@@ -90,7 +90,7 @@
             </div>
             <div class="card-content">
                 <div class="main-info">
-                    <span class="college-name">{{ s.collegeName }}</span>
+                    <span class="college-name">{{ collegeLabel({ name: s.collegeName, address: s.collegeAddress }) }}</span>
                     <span class="camera-id">Cam: {{ s.cameraName }}</span>
                 </div>
                 <div class="sub-info">
@@ -148,7 +148,7 @@
 
             <div class="lightbox-footer">
                 <div class="footer-details">
-                    <h3>{{ selectedScreenshot.collegeName }} - {{ selectedScreenshot.cameraName }}</h3>
+                    <h3>{{ collegeLabel({ name: selectedScreenshot.collegeName, address: selectedScreenshot.collegeAddress }) }} - {{ selectedScreenshot.cameraName }}</h3>
                     <p><i data-lucide="map-pin"></i> {{ selectedScreenshot.location }} | <i data-lucide="calendar"></i>
                         {{ selectedScreenshot.date }} {{ selectedScreenshot.time }}</p>
                 </div>
