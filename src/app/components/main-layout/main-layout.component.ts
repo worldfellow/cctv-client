@@ -305,7 +305,8 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
 
   logout(): void {
     this.cctvService.clearAuth();
-    this.session.clear();
+    // Ends the Keycloak session on the server so the refresh token can't be reused
+    this.session.logout();
     this.router.navigate(['/login']);
   }
 

@@ -142,7 +142,7 @@
                                 <span><span class="ok-text">{{ college.online }}</span> / {{ college.activeCameras }} online</span>
                                 <span *ngIf="college.notWorking" class="sub-line bad-text">{{ college.notWorking }} not working</span>
                                 <span *ngIf="college.pending" class="sub-line">{{ college.pending }} not checked</span>
-                                <span *ngIf="college.disabled" class="sub-line">{{ college.disabled }} disabled</span>
+                                <span *ngIf="college.disabled" class="sub-line">{{ college.disabled }} inactive</span>
                             </td>
                             <td class="col-uptime" [attr.data-label]="'Uptime (' + days + 'd)'" [ngClass]="uptimeClass(college.uptime)">{{ college.uptime !== null ? college.uptime + '%' : '-' }}</td>
                             <td class="col-outages" [attr.data-label]="'Outages (' + days + 'd)'" [class.warn-text]="college.outages > 0">{{ college.outages }}</td>

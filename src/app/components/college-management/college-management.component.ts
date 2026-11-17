@@ -26,6 +26,7 @@ export class CollegeManagementComponent implements OnInit, AfterViewInit, OnDest
   isUploading: boolean = false;
 
   isBulkUploadModalOpen: boolean = false;
+  bulkMode: 'import' | 'edit' = 'import';
   @ViewChild('fileInput') fileInput!: ElementRef;
   errorMessage: string = '';
   errorDetails: string = '';
@@ -325,7 +326,8 @@ export class CollegeManagementComponent implements OnInit, AfterViewInit, OnDest
     this.errorMessage = '';
   }
 
-  openBulkUploadModal(): void {
+  openBulkUploadModal(mode: 'import' | 'edit' = 'import'): void {
+    this.bulkMode = mode;
     this.errorMessage = '';
     this.errorDetails = '';
     this.isBulkUploadModalOpen = true;
@@ -358,6 +360,24 @@ export class CollegeManagementComponent implements OnInit, AfterViewInit, OnDest
     });
   }
 
+  downloadEditSheet(): void {
+    this.cctvService.downloadCollegesForEdit().subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `College_Bulk_Edit_${new Date().toISOString().split('T')[0]}.xlsx`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        this.toastService.show('Colleges exported successfully', 'success');
+      },
+      error: (err) => {
+        console.error('Error exporting colleges:', err);
+        this.toastService.show('Failed to export colleges', 'error');
+      }
+    });
+  }
+
   triggerFileInput(): void {
     if (this.fileInput) {
       this.fileInput.nativeElement.click();
@@ -371,7 +391,10 @@ export class CollegeManagementComponent implements OnInit, AfterViewInit, OnDest
       formData.append('file', file);
 
       this.isUploading = true;
-      this.cctvService.bulkUploadColleges(formData).subscribe({
+      const request$ = this.bulkMode === 'edit'
+        ? this.cctvService.bulkUpdateColleges(formData)
+        : this.cctvService.bulkUploadColleges(formData);
+      request$.subscribe({
         next: (res) => {
           this.isUploading = false;
           this.toastService.show(res.message || 'Colleges uploaded successfully!', 'success');
