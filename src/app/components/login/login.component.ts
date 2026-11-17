@@ -63,7 +63,11 @@ export class LoginComponent implements OnInit, AfterViewInit {
   }
 
   async ngOnInit(): Promise<void> {
-    // Restore an existing session (token still valid), then check the account state before going to the dashboard
+    // Restore an existing session (token still valid, or renewable with the refresh token),
+    // then check the account state before going to the dashboard
+    if (!this.session.isAuthenticated) {
+      await this.session.ensureValidToken();
+    }
     if (!this.session.isAuthenticated) {
       this.session.clear();
       return;
@@ -103,6 +107,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
     try {
       // Login goes through our backend (service-account client); the browser never calls Keycloak directly
       const response = await fetch(`${environment.apiUrl}/auth/keycloak-login`, {
+        credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: this.loginData.email, password: this.loginData.password })
@@ -187,6 +192,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
 
       // Re-authenticate with the new password
       const response = await fetch(`${environment.apiUrl}/auth/keycloak-login`, {
+        credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: this.loginData.email, password: this.changePasswordData.newPassword })

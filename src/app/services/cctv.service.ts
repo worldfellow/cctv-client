@@ -196,14 +196,7 @@ export class CctvService {
 
     constructor(private http: HttpClient) {
         this.loadSystemConfig();
-        const savedUser = localStorage.getItem('cctv_user');
-        if (savedUser) {
-            try {
-                this.userDetailsSubject.next(JSON.parse(savedUser));
-            } catch (e) {
-                console.error('Failed to parse saved user data:', e);
-            }
-        }
+        // User details are kept in memory only; the auth guard reloads them from the backend after a page reload
     }
 
     private formatConfig(config: any): any {
@@ -268,12 +261,10 @@ export class CctvService {
     }
 
     setUserDetails(user: User) {
-        localStorage.setItem('cctv_user', JSON.stringify(user));
         this.userDetailsSubject.next(user);
     }
 
     clearAuth() {
-        localStorage.removeItem('cctv_user');
         this.tokenSubject.next(null);
         this.userDetailsSubject.next(null);
     }
@@ -389,6 +380,14 @@ export class CctvService {
 
     downloadCollegeTemplate(): Observable<any> {
         return this.http.get(`${this.apiUrl}/colleges/template/download`, { responseType: 'blob' });
+    }
+
+    downloadCollegesForEdit(): Observable<any> {
+        return this.http.get(`${this.apiUrl}/colleges/bulk-export`, { responseType: 'blob' });
+    }
+
+    bulkUpdateColleges(formData: FormData): Observable<any> {
+        return this.http.post(`${this.apiUrl}/colleges/bulk-update`, formData, this.getHeaders());
     }
 
     bulkUploadColleges(formData: FormData): Observable<any> {

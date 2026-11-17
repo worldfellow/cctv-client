@@ -9,8 +9,13 @@ export const authGuard = async (route: ActivatedRouteSnapshot, state: RouterStat
     const router = inject(Router);
     const cctvService = inject(CctvService);
 
+    // Access token expired (e.g. after a page reload): renew it with the refresh token before giving up
     if (!session.isAuthenticated) {
-        // Not logged in (or token expired): go to the custom login page
+        await session.ensureValidToken();
+    }
+
+    if (!session.isAuthenticated) {
+        // Not logged in (or session could not be renewed): go to the custom login page
         router.navigate(['/login']);
         return false;
     }

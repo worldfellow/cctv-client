@@ -64,7 +64,7 @@ export class ConnectionStatusComponent implements OnInit, OnDestroy {
     no_response: 'No RTSP Response',
     offline: 'Offline',
     pending: 'Not Checked Yet',
-    disabled: 'Disabled'
+    disabled: 'Inactive'
   };
 
   constructor(
