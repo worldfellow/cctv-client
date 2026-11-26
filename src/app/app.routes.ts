@@ -10,6 +10,10 @@ export const routes: Routes = [
         loadComponent: () => import('./components/login/login.component').then(m => m.LoginComponent)
     },
     {
+        path: 'too-many-requests',
+        loadComponent: () => import('./components/rate-limited/rate-limited.component').then(m => m.RateLimitedComponent)
+    },
+    {
         path: '',
         component: MainLayoutComponent,
         canActivate: [authGuard],

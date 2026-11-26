@@ -1,0 +1,31 @@
+:host { display: block; }
+.page {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 16px;
+  background: radial-gradient(circle at 20% 10%, #1e293b, #0f172a 60%); color: #e2e8f0; font-family: inherit;
+}
+.card {
+  width: 100%; max-width: 680px; text-align: center; padding: 28px 20px;
+  background: rgba(30, 41, 59, .7); border: 1px solid rgba(148, 163, 184, .2); border-radius: 18px;
+  backdrop-filter: blur(8px); box-shadow: 0 20px 60px rgba(0, 0, 0, .4);
+}
+h1 { margin: 0 0 6px; font-size: 1.7rem; background: linear-gradient(90deg, #38bdf8, #a78bfa); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.msg { margin: 0 0 18px; color: #94a3b8; }
+.timer { position: relative; width: 150px; height: 150px; margin: 0 auto 18px; }
+.timer svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.timer circle { fill: none; stroke-width: 8; }
+.timer .track { stroke: rgba(148, 163, 184, .2); }
+.timer .bar { stroke: #38bdf8; stroke-linecap: round; stroke-dasharray: 326.7; transition: stroke-dashoffset 1s linear, stroke .3s; }
+.timer.done .bar { stroke: #22c55e; }
+.timer .time { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 700; font-variant-numeric: tabular-nums; animation: pulse 2s ease-in-out infinite; }
+.timer.done .time { animation: none; color: #22c55e; }
+@keyframes pulse { 50% { transform: scale(1.06); } }
+.go {
+  padding: 10px 26px; border: 0; border-radius: 10px; font-weight: 600; cursor: pointer; color: #fff;
+  background: linear-gradient(90deg, #0ea5e9, #8b5cf6); transition: transform .15s, opacity .2s;
+}
+.go:disabled { opacity: .45; cursor: not-allowed; }
+.go:not(:disabled):hover { transform: translateY(-1px); }
+.game { margin-top: 26px; }
+.hint { margin: 0 0 8px; font-size: .85rem; color: #94a3b8; }
+kbd { background: #334155; padding: 1px 6px; border-radius: 4px; font-size: .8rem; }
+canvas { width: 100%; height: auto; background: #0b1220; border: 1px solid rgba(148, 163, 184, .2); border-radius: 12px; touch-action: manipulation; cursor: pointer; }

@@ -86,6 +86,8 @@ export class ScreenshotGalleryComponent implements OnInit, OnDestroy, AfterViewI
 
     ngOnDestroy(): void {
         this.toggleBodyClass(false); // Cleanup on navigate away
+        this.imageBlobs.forEach(url => URL.revokeObjectURL(url));
+        this.imageBlobs.clear();
         this.destroy$.next();
         this.destroy$.complete();
     }
@@ -153,37 +155,32 @@ export class ScreenshotGalleryComponent implements OnInit, OnDestroy, AfterViewI
         this.toggleBodyClass(false);
     }
 
-    getFullImageUrl(path: string): string {
-        return `${this.serverBaseUrl}${path}`;
+    // Screenshots are protected: images are fetched with the login token and shown from in-memory blobs
+    private imageBlobs = new Map<string, string>();
+    private imageLoading = new Set<string>();
+
+    imageSrc(s: any): string {
+        const cached = this.imageBlobs.get(s.id);
+        if (cached) return cached;
+        if (!this.imageLoading.has(s.id)) {
+            this.imageLoading.add(s.id);
+            this.http.get(`${this.serverBaseUrl}/screenshots/file/${s.id}`, { responseType: 'blob' }).subscribe({
+                next: (blob) => { this.imageBlobs.set(s.id, URL.createObjectURL(blob)); this.imageLoading.delete(s.id); },
+                error: () => this.imageLoading.delete(s.id)
+            });
+        }
+        return '';
     }
 
-    triggerDownload(url: string): void {
-        // Use HttpClient to fetch as blob to avoid navigation
-        this.http.get(url, { responseType: 'blob' }).subscribe({
-            next: (blob) => {
-                const blobUrl = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = blobUrl;
-                const fileName = url.split('/').pop() || 'screenshot.png';
-                link.download = fileName;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(blobUrl);
-            },
-            error: (err) => {
-                console.error('Failed to download image:', err);
-                // Fallback to direct link if blob fails (might be CORS issue)
-                const link = document.createElement('a');
-                link.href = url;
-                link.target = '_blank'; // Use _blank as fallback to avoid current page navigation
-                const fileName = url.split('/').pop() || 'screenshot.png';
-                link.download = fileName;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            }
-        });
+    triggerDownload(s: any): void {
+        const url = this.imageSrc(s);
+        if (!url) return;
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = (s.imageUrl || '').split('/').pop() || 'screenshot.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 
     // Selection Methods

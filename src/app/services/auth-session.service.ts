@@ -1,4 +1,6 @@
 import { Injectable, NgZone, inject } from '@angular/core';
+import { redirectToRateLimit, retryAfterSeconds } from '../utils/rate-limit-redirect';
+import { gatewayFetch, readJson } from '../utils/response-crypto';
 import { environment } from '../../environments/environment';
 
 // Renew the access token this long before it expires
@@ -12,7 +14,7 @@ export interface TokenResponse {
 }
 
 /**
- * Holds the access token issued by the backend's /auth/keycloak-login endpoint and keeps it fresh.
+ * Holds the access token issued by the backend's /auth/x7Kq2mVd9RtLw4Ze endpoint and keeps it fresh.
  * The browser never talks to Keycloak: refresh goes through the backend's /auth/refresh proxy.
  *
  * Nothing is written to localStorage/sessionStorage. The access token lives only in memory; the refresh
@@ -67,10 +69,7 @@ export class AuthSessionService {
     async logout(): Promise<void> {
         this.clear();
         try {
-            await fetch(`${environment.apiUrl}/auth/logout`, {
-                method: 'POST',
-                credentials: 'include'
-            });
+            await gatewayFetch('POST', '/auth/logout');
         } catch {
             // Server unreachable: the in-memory token is already gone
         }
@@ -116,17 +115,19 @@ export class AuthSessionService {
     private async doRefresh(): Promise<boolean> {
         try {
             // The refresh token is in an HttpOnly cookie; the browser attaches it
-            const response = await fetch(`${environment.apiUrl}/auth/refresh`, {
-                method: 'POST',
-                credentials: 'include'
-            });
+            const response = await gatewayFetch('POST', '/auth/refresh');
             if (response.status === 401 || response.status === 400) {
                 // No/invalid session cookie (expired, session ended, user disabled)
                 this.clear();
                 return false;
             }
+            if (response.status === 429) {
+                const body = await readJson(response).catch(() => null);
+                redirectToRateLimit(retryAfterSeconds(body, response.headers.get('Retry-After')));
+                return false;
+            }
             if (!response.ok) return false; // Server/Keycloak temporarily down: keep state, retry later
-            this.setTokens(await response.json());
+            this.setTokens(await readJson(response));
             return true;
         } catch (err) {
             console.warn('Token refresh failed (network):', err);

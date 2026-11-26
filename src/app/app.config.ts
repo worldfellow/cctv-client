@@ -11,12 +11,16 @@ import {
 
 import { routes } from './app.routes';
 import { authInterceptor, bearerInterceptor } from './interceptors/auth.interceptor';
+import { decryptInterceptor } from './interceptors/decrypt.interceptor';
+import { retryLimitInterceptor } from './interceptors/retry-limit.interceptor';
+import { rateLimitInterceptor } from './interceptors/rate-limit.interceptor';
+import { gatewayInterceptor } from './interceptors/gateway.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
-    provideHttpClient(withInterceptorsFromDi(), withInterceptors([bearerInterceptor, authInterceptor])),
+    provideHttpClient(withInterceptorsFromDi(), withInterceptors([rateLimitInterceptor, retryLimitInterceptor, bearerInterceptor, authInterceptor, decryptInterceptor, gatewayInterceptor])),
     provideAnimations(),
     importProvidersFrom(LucideAngularModule.pick({
       AlertCircle, AlertTriangle, Building2, CameraOff, CheckCircle, CheckSquare, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Circle,
