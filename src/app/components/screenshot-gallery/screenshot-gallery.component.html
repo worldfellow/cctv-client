@@ -83,7 +83,7 @@
                         (change)="toggleSelection($event, s.id)" />
                     <span class="checkmark"></span>
                 </label>
-                <img [src]="getFullImageUrl(s.imageUrl)" alt="Screenshot" loading="lazy">
+                <img [src]="imageSrc(s)" alt="Screenshot" loading="lazy">
                 <div class="overlay">
                     <i data-lucide="maximize-2"></i>
                 </div>
@@ -143,7 +143,7 @@
             </button>
 
             <div class="lightbox-img-container">
-                <img [src]="getFullImageUrl(selectedScreenshot.imageUrl)" alt="Full View">
+                <img [src]="imageSrc(selectedScreenshot)" alt="Full View">
             </div>
 
             <div class="lightbox-footer">
@@ -154,7 +154,7 @@
                 </div>
                 <div class="footer-actions">
                     <button class="download-btn"
-                        (click)="triggerDownload(getFullImageUrl(selectedScreenshot.imageUrl))">
+                        (click)="triggerDownload(selectedScreenshot)">
                         <i data-lucide="download"></i>
                         <span>Download</span>
                     </button>

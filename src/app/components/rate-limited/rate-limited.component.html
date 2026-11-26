@@ -1,0 +1,23 @@
+<div class="page">
+  <div class="card">
+    <h1>Whoa, slow down!</h1>
+    <p class="msg">Too many requests were sent{{ blocked ? ' (an action failed 5 times)' : '' }}. You can continue in:</p>
+
+    <div class="timer" [class.done]="remaining === 0">
+      <svg viewBox="0 0 120 120" aria-hidden="true">
+        <circle class="track" cx="60" cy="60" r="52"></circle>
+        <circle class="bar" cx="60" cy="60" r="52" [style.strokeDashoffset]="dashOffset"></circle>
+      </svg>
+      <div class="time">{{ display }}</div>
+    </div>
+
+    <button class="go" [disabled]="remaining > 0" (click)="goBack()">
+      {{ remaining > 0 ? 'Please wait…' : (blocked ? 'Refresh and continue' : 'Continue') }}
+    </button>
+
+    <div class="game">
+      <p class="hint">Bored? Play while you wait &mdash; press <kbd>Space</kbd> / <kbd>&uarr;</kbd> or tap to jump</p>
+      <canvas #game width="600" height="180" (pointerdown)="jump()"></canvas>
+    </div>
+  </div>
+</div>

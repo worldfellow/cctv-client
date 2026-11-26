@@ -5,6 +5,8 @@ import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { CctvService } from '../../services/cctv.service';
 import { AuthSessionService } from '../../services/auth-session.service';
+import { redirectToRateLimit, retryAfterSeconds } from '../../utils/rate-limit-redirect';
+import { gatewayFetch, readJson } from '../../utils/response-crypto';
 import { environment } from '../../../environments/environment';
 
 import { IconService } from '../../services/icon.service';
@@ -106,15 +108,16 @@ export class LoginComponent implements OnInit, AfterViewInit {
 
     try {
       // Login goes through our backend (service-account client); the browser never calls Keycloak directly
-      const response = await fetch(`${environment.apiUrl}/auth/keycloak-login`, {
-        credentials: 'include',
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: this.loginData.email, password: this.loginData.password })
-      });
+      const response = await gatewayFetch('POST', '/auth/x7Kq2mVd9RtLw4Ze', { email: this.loginData.email, password: this.loginData.password });
+
+      if (response.status === 429) {
+        const body = await readJson(response).catch(() => null);
+        redirectToRateLimit(retryAfterSeconds(body, response.headers.get('Retry-After')), '/login');
+        return;
+      }
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
+        const errorData = await readJson(response).catch(() => null);
 
         // Check if the error is because account is not fully set up (temporary password)
         if (errorData?.error === 'invalid_grant' && errorData?.error_description?.includes('not fully set up')) {
@@ -134,7 +137,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
         return;
       }
 
-      const tokenData = await response.json();
+      const tokenData = await readJson(response);
 
       // Store the tokens issued by the backend
       this.setupKeycloakTokens(tokenData);
@@ -191,12 +194,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
       ).toPromise();
 
       // Re-authenticate with the new password
-      const response = await fetch(`${environment.apiUrl}/auth/keycloak-login`, {
-        credentials: 'include',
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: this.loginData.email, password: this.changePasswordData.newPassword })
-      });
+      const response = await gatewayFetch('POST', '/auth/x7Kq2mVd9RtLw4Ze', { email: this.loginData.email, password: this.changePasswordData.newPassword });
 
       if (!response.ok) {
         this.changePasswordError = 'Password changed but login failed. Please sign in again.';
@@ -205,7 +203,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
         return;
       }
 
-      const tokenData = await response.json();
+      const tokenData = await readJson(response);
       this.setupKeycloakTokens(tokenData);
 
       // Navigate to dashboard
