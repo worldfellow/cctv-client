@@ -47,7 +47,9 @@ export class CollegeManagementComponent implements OnInit, AfterViewInit, OnDest
   currentCollege: Partial<College> = {
     name: '',
     address: '',
-    contactEmail: ''
+    contactEmail: '',
+    mobileNo: '',
+    cameraPersonnelName: ''
   };
 
   searchQuery: string = '';
@@ -307,7 +309,7 @@ export class CollegeManagementComponent implements OnInit, AfterViewInit, OnDest
   // --- CRUD ---
   openCreateModal(): void {
     this.isEditing = false;
-    this.currentCollege = { name: '', address: '', contactEmail: '' };
+    this.currentCollege = { name: '', address: '', contactEmail: '', mobileNo: '', cameraPersonnelName: '' };
     this.errorMessage = '';
     this.showModal = true;
     this.refreshIcons();
@@ -425,6 +427,8 @@ export class CollegeManagementComponent implements OnInit, AfterViewInit, OnDest
     this.currentCollege.name = this.currentCollege.name?.trim();
     this.currentCollege.address = this.currentCollege.address?.trim();
     this.currentCollege.contactEmail = this.currentCollege.contactEmail?.trim();
+    this.currentCollege.mobileNo = this.currentCollege.mobileNo?.trim();
+    this.currentCollege.cameraPersonnelName = this.currentCollege.cameraPersonnelName?.trim();
 
     if (this.isEditing && this.currentCollege.id) {
       this.cctvService.updateCollege(this.currentCollege.id, this.currentCollege).subscribe({

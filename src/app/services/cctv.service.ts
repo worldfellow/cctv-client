@@ -39,6 +39,8 @@ export interface College {
     name: string;
     address?: string;
     contactEmail?: string;
+    mobileNo?: string;
+    cameraPersonnelName?: string;
     createdAt?: string;
     isActive?: boolean;
 }
@@ -222,7 +224,7 @@ export class CctvService {
         // The config is only loaded once per page load, so retry while the server is starting or restarting
         // instead of keeping the defaults (and no logo) for the whole session
         this.getSystemConfig().pipe(
-            retry({ count: 10, delay: 3000 })
+            retry({ count: 5, delay: 3000 })
         ).subscribe({
             next: (config) => {
                 if (config) this.systemConfigSubject.next(config);
@@ -395,10 +397,16 @@ export class CctvService {
     }
 
     // Camera Management
-    getCameras(page: number = 1, limit: number = 10, collegeId: string = ''): Observable<PaginatedResponse<any>> {
+    getCameras(page: number = 1, limit: number = 10, collegeId: string = '', deviceIds: string[] = []): Observable<PaginatedResponse<any>> {
         const params: any = { page: page.toString(), limit: limit.toString() };
         if (collegeId) params.collegeId = collegeId;
+        if (deviceIds.length) params.deviceIds = deviceIds.join(',');
         return this.http.get<PaginatedResponse<any>>(`${this.apiUrl}/cameras`, { params });
+    }
+
+    /** Real camera credentials (permission-gated and audited on the server). */
+    getCameraCredentials(id: string): Observable<{ username: string; password: string }> {
+        return this.http.get<{ username: string; password: string }>(`${this.apiUrl}/cameras/${id}/credentials`);
     }
 
     createCamera(camera: any): Observable<any> {

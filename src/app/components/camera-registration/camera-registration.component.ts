@@ -90,6 +90,11 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy, AfterView
     showFilterDropdown: boolean = false;
     filterSearch: string = '';
 
+    // Device Type (multi-select) filter
+    selectedFilterDevices: Set<string> = new Set();
+    showDeviceFilterDropdown: boolean = false;
+    deviceFilterSearch: string = '';
+
     openDropdownIndex: number | null = null; // For FormArray dropdowns
     modalSearch: string = '';
 
@@ -106,6 +111,7 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy, AfterView
     @HostListener('document:click')
     onDocumentClick(): void {
         this.showFilterDropdown = false;
+        this.showDeviceFilterDropdown = false;
         this.openDropdownIndex = null;
     }
 
@@ -256,7 +262,46 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy, AfterView
     toggleFilterDropdown(event: Event): void {
         event.stopPropagation();
         this.showFilterDropdown = !this.showFilterDropdown;
+        this.showDeviceFilterDropdown = false;
         this.openDropdownIndex = null;
+    }
+
+    // --- Device Type filter ---
+    toggleDeviceFilterDropdown(event: Event): void {
+        event.stopPropagation();
+        this.showDeviceFilterDropdown = !this.showDeviceFilterDropdown;
+        this.showFilterDropdown = false;
+        this.openDropdownIndex = null;
+        this.deviceFilterSearch = '';
+    }
+
+    get filteredDeviceOptions(): any[] {
+        const q = this.deviceFilterSearch.toLowerCase();
+        return q ? this.devices.filter(d => (d.deviceName || '').toLowerCase().includes(q)) : this.devices;
+    }
+
+    toggleDeviceFilter(id: string): void {
+        if (this.selectedFilterDevices.has(id)) {
+            this.selectedFilterDevices.delete(id);
+        } else {
+            this.selectedFilterDevices.add(id);
+        }
+        this.onFilterChange();
+    }
+
+    clearDeviceFilter(): void {
+        this.selectedFilterDevices.clear();
+        this.onFilterChange();
+    }
+
+    get selectedFilterDeviceLabel(): string {
+        const n = this.selectedFilterDevices.size;
+        if (n === 0) return 'All Device Types';
+        if (n === 1) {
+            const d = this.devices.find(x => this.selectedFilterDevices.has(x.id));
+            return d ? d.deviceName : '1 selected';
+        }
+        return `${n} Device Types`;
     }
 
     selectFilterCollege(collegeId: string): void {
@@ -294,7 +339,8 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy, AfterView
     loadCameras(): void {
         this.isLoading = true;
         const collegeId = this.selectedFilterCollege || undefined;
-        this.cctvService.getCameras(this.currentPage, this.pageSize, collegeId).subscribe({
+        const deviceIds = Array.from(this.selectedFilterDevices);
+        this.cctvService.getCameras(this.currentPage, this.pageSize, collegeId, deviceIds).subscribe({
             next: (response) => {
                 this.allRecords = (response.data || []).filter((cam: any) => cam && cam.id).map((cam: any) => ({
                     id: cam.id,
@@ -481,8 +527,9 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy, AfterView
                 collegeId: record.collegeId,
                 ipAddress: record.ipAddress,
                 rtspPort: record.rtspPort,
-                username: record.username || '',
-                password: record.password || '',
+                // Credentials are never sent to the browser; blank means "keep current"
+                username: '',
+                password: '',
                 isActive: record.isActive,
                 deviceId: record.deviceId || ''
             });
@@ -618,12 +665,22 @@ export class CameraRegistrationComponent implements OnInit, OnDestroy, AfterView
         this.showPasswords[index] = !this.showPasswords[index];
     }
 
+    revealedCredentials: Map<string, { username: string; password: string }> = new Map();
+
     toggleTablePassword(id: string) {
         if (this.visibleTablePasswords.has(id)) {
             this.visibleTablePasswords.delete(id);
-        } else {
-            this.visibleTablePasswords.add(id);
+            this.revealedCredentials.delete(id); // don't keep secrets in memory once hidden
+            return;
         }
+        this.cctvService.getCameraCredentials(id).subscribe({
+            next: (creds) => {
+                this.revealedCredentials.set(id, creds);
+                this.visibleTablePasswords.add(id);
+                this.cdr.detectChanges();
+            },
+            error: (err) => this.toastService.show(err.error?.message || 'Unable to fetch credentials', 'error')
+        });
     }
 
     onSubmit() {

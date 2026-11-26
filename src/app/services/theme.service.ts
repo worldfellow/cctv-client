@@ -1,5 +1,6 @@
 import { Injectable, Renderer2, RendererFactory2 } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
+import { secureStorage } from '../utils/secure-storage';
 
 export type ThemeType = 'white' | 'midnight' | 'obsidian';
 
@@ -15,7 +16,7 @@ export class ThemeService {
 
   constructor(rendererFactory: RendererFactory2) {
     this.renderer = rendererFactory.createRenderer(null, null);
-    const savedTheme = localStorage.getItem('theme') as ThemeType;
+    const savedTheme = secureStorage.get('_t') as ThemeType;
     if (savedTheme && ['white', 'midnight', 'obsidian'].includes(savedTheme)) {
       this.setTheme(savedTheme);
     } else {
@@ -33,7 +34,7 @@ export class ThemeService {
     this.renderer.addClass(document.body, `theme-${theme}`);
 
     this.currentTheme = theme;
-    localStorage.setItem('theme', theme);
+    secureStorage.set('_t', theme);
     this.themeSubject.next(theme);
   }
 

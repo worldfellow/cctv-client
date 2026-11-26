@@ -8,7 +8,7 @@ import { environment } from '../../environments/environment';
 
 const isApiCall = (url: string) => url.startsWith(environment.apiUrl) || url.startsWith('/api');
 // Login/refresh/logout endpoints don't use the bearer token and must never trigger a refresh
-const isAuthEndpoint = (url: string) => /\/auth\/(keycloak-login|login|refresh|logout)\b/.test(url);
+const isAuthEndpoint = (url: string) => /\/auth\/(x7Kq2mVd9RtLw4Ze|login|refresh|logout)\b/.test(url);
 
 const withToken = (req: HttpRequest<unknown>, token: string | null) =>
     token ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : req;

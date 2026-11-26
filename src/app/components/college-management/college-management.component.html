@@ -73,6 +73,8 @@
                         </th>
                         <th>College Name</th>
                         <th>Contact Email</th>
+                        <th>Mobile No</th>
+                        <th>Camera Personnel</th>
                         <th>Address</th>
                         <th>Status</th>
                         <th>Registered</th>
@@ -99,6 +101,12 @@
                         </td>
                         <td data-label="Contact Email">
                             <span class="email">{{ college.contactEmail || 'N/A' }}</span>
+                        </td>
+                        <td data-label="Mobile No">
+                            <span>{{ college.mobileNo || 'N/A' }}</span>
+                        </td>
+                        <td data-label="Camera Personnel">
+                            <span>{{ college.cameraPersonnelName || 'N/A' }}</span>
                         </td>
                         <td data-label="Address">
                             <span class="address">{{ college.address || 'N/A' }}</span>
@@ -135,7 +143,7 @@
 
                     <!-- Loading State -->
                     <tr *ngIf="isLoading">
-                        <td colspan="7">
+                        <td colspan="9">
                             <div class="table-loading">
                                 <div class="spinner"></div>
                                 <span>Fetching institution data...</span>
@@ -145,7 +153,7 @@
 
                     <!-- Empty State -->
                     <tr *ngIf="colleges.length === 0 && !isLoading">
-                        <td colspan="7">
+                        <td colspan="9">
                             <div class="enhanced-empty-state">
                                 <div class="illustration">
                                     <i data-lucide="building" class="bg-icon"></i>
@@ -248,6 +256,29 @@
                             class="validation-error">
                             <span *ngIf="contactEmail.errors?.['required']">Contact email is required.</span>
                             <span *ngIf="contactEmail.errors?.['email']">Please enter a valid email address.</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Mobile No</label>
+                        <div class="input-wrapper">
+                            <i data-lucide="phone" class="input-icon"></i>
+                            <input type="tel" name="mobileNo" [(ngModel)]="currentCollege.mobileNo"
+                                #mobileNo="ngModel" placeholder="Enter 10-digit mobile number" required
+                                maxlength="10" inputmode="numeric" pattern="^[0-9]{10}$">
+                        </div>
+                        <div *ngIf="mobileNo.invalid && (mobileNo.dirty || mobileNo.touched)" class="validation-error">
+                            <span *ngIf="mobileNo.errors?.['required']">Mobile number is required.</span>
+                            <span *ngIf="mobileNo.errors?.['pattern']">Mobile number must be exactly 10 digits.</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Camera Personnel Name</label>
+                        <div class="input-wrapper">
+                            <i data-lucide="user" class="input-icon"></i>
+                            <input type="text" name="cameraPersonnelName" [(ngModel)]="currentCollege.cameraPersonnelName"
+                                placeholder="Enter camera personnel name">
                         </div>
                     </div>
 
